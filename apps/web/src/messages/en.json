@@ -1,0 +1,46 @@
+{
+  "app": {
+    "name": "PENELOPE",
+    "tagline": "Data today. Safer tomorrows.",
+    "pillars": "Predict · Prepare · Protect",
+    "subtitle": "AI-Powered Flash-Flood Prediction & Early-Warning Platform for Mountain Terrains"
+  },
+  "nav": {
+    "liveMap": "Live Flood Map",
+    "villageRisk": "Village Risk",
+    "sensors": "River Sensors",
+    "authority": "Authority Dashboard",
+    "modelTransparency": "AI Transparency & Metrics",
+    "sos": "Emergency SOS"
+  },
+  "risk": {
+    "low": "Low Risk",
+    "moderate": "Moderate Risk",
+    "high": "High Risk",
+    "veryHigh": "Very High Risk"
+  },
+  "legend": {
+    "safe": "Normal Flow",
+    "watch": "Watch Level",
+    "warning": "Warning Level",
+    "danger": "Evacuate Imminent"
+  },
+  "sensor": {
+    "simulated": "SIMULATED",
+    "live": "LIVE HARDWARE",
+    "waterLevel": "Water Level",
+    "dangerLevel": "Danger Mark",
+    "warningLevel": "Warning Mark",
+    "rateOfRise": "Rate of Rise"
+  },
+  "village": {
+    "elevation": "Elevation",
+    "slope": "Slope",
+    "population": "Population",
+    "riverDistance": "River Proximity",
+    "safeShelter": "Designated Relief Shelter",
+    "evacuationAdvice": "Follow designated evacuation routes to higher elevations."
+  },
+  "disclaimer": "Advisory only. Experimental AI flash-flood prediction. Always follow official IMD/CWC/NDMA disaster management directives."
+}
+

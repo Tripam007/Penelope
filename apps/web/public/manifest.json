@@ -1,0 +1,17 @@
+{
+  "name": "PENELOPE - Flash-Flood Early Warning Platform",
+  "short_name": "PENELOPE",
+  "description": "Data today. Safer tomorrows. AI-powered flash-flood early warning system.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#090d16",
+  "theme_color": "#0ea5e9",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
+
