@@ -1,0 +1,137 @@
+{
+  "villages": [
+    {
+      "id": 1,
+      "name": "Kedarpur",
+      "lat": 30.3,
+      "lon": 78.0,
+      "population": 1200,
+      "risk": "Very High",
+      "score": 0.86,
+      "rainfall_mm_24h": 148,
+      "updated": "2026-11-13T10:05:00Z"
+    },
+    {
+      "id": 2,
+      "name": "Rudraprayag",
+      "lat": 30.2844,
+      "lon": 78.9811,
+      "population": 2450,
+      "risk": "Very High",
+      "score": 0.79,
+      "rainfall_mm_24h": 132,
+      "updated": "2026-11-13T10:02:00Z"
+    },
+    {
+      "id": 3,
+      "name": "Joshimath",
+      "lat": 30.5506,
+      "lon": 79.566,
+      "population": 1850,
+      "risk": "High",
+      "score": 0.68,
+      "rainfall_mm_24h": 96,
+      "updated": "2026-11-13T09:58:00Z"
+    },
+    {
+      "id": 4,
+      "name": "Bhatwari",
+      "lat": 30.8186,
+      "lon": 78.6197,
+      "population": 950,
+      "risk": "High",
+      "score": 0.58,
+      "rainfall_mm_24h": 82,
+      "updated": "2026-11-13T09:50:00Z"
+    },
+    {
+      "id": 5,
+      "name": "Devprayag",
+      "lat": 30.1459,
+      "lon": 78.5993,
+      "population": 1640,
+      "risk": "Moderate",
+      "score": 0.41,
+      "rainfall_mm_24h": 54,
+      "updated": "2026-11-13T09:45:00Z"
+    },
+    {
+      "id": 6,
+      "name": "Chamba",
+      "lat": 30.3442,
+      "lon": 78.3936,
+      "population": 1420,
+      "risk": "Moderate",
+      "score": 0.34,
+      "rainfall_mm_24h": 42,
+      "updated": "2026-11-13T09:40:00Z"
+    },
+    {
+      "id": 7,
+      "name": "Karnaprayag",
+      "lat": 30.2581,
+      "lon": 79.2188,
+      "population": 1780,
+      "risk": "Moderate",
+      "score": 0.29,
+      "rainfall_mm_24h": 36,
+      "updated": "2026-11-13T09:35:00Z"
+    },
+    {
+      "id": 8,
+      "name": "Srinagar",
+      "lat": 30.2247,
+      "lon": 78.7986,
+      "population": 3100,
+      "risk": "Low",
+      "score": 0.18,
+      "rainfall_mm_24h": 19,
+      "updated": "2026-11-13T09:30:00Z"
+    },
+    {
+      "id": 9,
+      "name": "Guptkashi",
+      "lat": 30.5269,
+      "lon": 79.0772,
+      "population": 1100,
+      "risk": "Low",
+      "score": 0.14,
+      "rainfall_mm_24h": 14,
+      "updated": "2026-11-13T09:25:00Z"
+    },
+    {
+      "id": 10,
+      "name": "Mussoorie",
+      "lat": 30.4598,
+      "lon": 78.0644,
+      "population": 2200,
+      "risk": "Low",
+      "score": 0.09,
+      "rainfall_mm_24h": 8,
+      "updated": "2026-11-13T09:20:00Z"
+    }
+  ],
+  "alerts": [
+    {
+      "id": 1,
+      "village": "Kedarpur",
+      "risk": "Very High",
+      "message": "Evacuate low-lying areas immediately",
+      "time": "2026-11-13T10:05:00Z"
+    },
+    {
+      "id": 2,
+      "village": "Rudraprayag",
+      "risk": "Very High",
+      "message": "Severe flash flood threshold exceeded after 132 mm rainfall",
+      "time": "2026-11-13T10:02:00Z"
+    },
+    {
+      "id": 3,
+      "village": "Joshimath",
+      "risk": "High",
+      "message": "High surface runoff warning issued for hillside settlements",
+      "time": "2026-11-13T09:58:00Z"
+    }
+  ]
+}

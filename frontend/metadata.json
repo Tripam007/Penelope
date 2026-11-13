@@ -1,0 +1,6 @@
+{
+  "name": "Tactical Hydrologic Command",
+  "description": "Uttarakhand Flash Flood Prediction & Alert Command Dashboard using OpenStreetMap and village risk telemetry.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
