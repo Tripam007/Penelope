@@ -1,0 +1,34 @@
+{
+  "model_name": "Hydrology Sequence LSTM",
+  "timestamp": "2026-11-13T16:52:20.540899Z",
+  "dataset_size": 1000,
+  "metrics": {
+    "accuracy": 0.096,
+    "roc_auc": 0.7449,
+    "pr_auc": 0.0993,
+    "f1_score": 0.1102,
+    "precision": 0.0583,
+    "recall": 1.0,
+    "brier_score": 0.2947,
+    "confusion_matrix": [
+      [
+        40,
+        904
+      ],
+      [
+        0,
+        56
+      ]
+    ]
+  },
+  "feature_importances": {
+    "temporal_horizon_hours": 24,
+    "channels": [
+      "hourly_rain",
+      "soil_moisture",
+      "river_stage",
+      "discharge"
+    ]
+  },
+  "disclaimer": "ADVISORY ONLY. Model metrics derived against hydro-meteorological proxy thresholds. Follow official IMD/CWC/NDMA warnings."
+}
