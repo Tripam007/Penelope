@@ -162,3 +162,4 @@ class FloodRiskPredictor:
             "key_factors": contributions,
             "advisory_disclaimer": "Advisory only. Model outputs are experimental AI predictions. Follow official IMD/CWC/NDMA warnings.",
         }
+

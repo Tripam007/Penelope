@@ -133,3 +133,4 @@ def trigger_simulated_cloudburst_surge(sensor_code: str, db: Session = Depends(g
         "sim_badge": True,
         "notice": "This reading is SIMULATED and labeled accordingly."
     }
+

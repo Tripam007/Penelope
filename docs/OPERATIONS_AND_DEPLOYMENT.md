@@ -82,3 +82,4 @@ WEBHOOK_ALERT_URL=https://emergency-services.state.gov.in/api/v1/webhook
 
 **Graceful Degradation Guarantee:**
 If any or all of the above credentials are omitted, the platform starts with 0 errors. Alert dispatch calls for unconfigured channels record the delivery status as `skipped_unconfigured` and log the reason in the database and audit trail. The UI shows the provider as disabled and never reports unverified deliveries.
+

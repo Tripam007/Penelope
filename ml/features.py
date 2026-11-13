@@ -104,3 +104,4 @@ def extract_features_vector(raw_dict: Dict[str, Any]) -> List[float]:
         sensor_ror,
         min(2.5, max(0.0, sensor_ratio)),
     ]
+

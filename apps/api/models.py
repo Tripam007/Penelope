@@ -171,3 +171,4 @@ class AlertDelivery(Base):
     attempted_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     alert: Mapped["Alert"] = relationship("Alert", back_populates="deliveries")
+

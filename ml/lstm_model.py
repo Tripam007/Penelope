@@ -83,3 +83,4 @@ try:
 
 except Exception:
     SmallHydrologyLSTM = None  # Fallback gracefully if torch c-extensions blocked
+

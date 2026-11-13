@@ -80,3 +80,4 @@ Interactive OpenAPI Swagger Docs: `http://localhost:8000/docs`
   - Streams real-time `SENSOR_TELEMETRY` and `ALERT_TRIGGERED` events to connected browser and authority clients.
 - `GET /api/v1/events/sse`
   - Server-Sent Events alternative for lightweight clients.
+

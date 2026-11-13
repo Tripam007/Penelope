@@ -87,3 +87,4 @@ def get_village_detail(village_id: str, db: Session = Depends(get_db)):
             for a in recent_alerts
         ]
     }
+

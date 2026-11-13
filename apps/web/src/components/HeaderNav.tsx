@@ -2,7 +2,8 @@
 
 import React from "react";
 import { usePenelopeStore } from "@/lib/store";
-import { Shield, Waves, Activity, AlertTriangle, Radio, Globe } from "lucide-react";
+import { Shield, Waves, Activity, AlertTriangle, Radio, Globe, Palette } from "lucide-react";
+import Link from "next/link";
 
 export default function HeaderNav() {
   const {
@@ -71,6 +72,14 @@ export default function HeaderNav() {
           <span className="hidden md:inline">AI Metrics & Honor</span>
         </button>
 
+        <Link
+          href="/design"
+          className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 flex items-center gap-1.5 transition"
+        >
+          <Palette className="w-3.5 h-3.5 text-teal-400" />
+          <span className="hidden lg:inline">Design System</span>
+        </Link>
+
         {/* Language Switcher */}
         <div className="flex items-center p-0.5 rounded-lg bg-slate-900 border border-slate-800 text-xs">
           <button
@@ -94,3 +103,4 @@ export default function HeaderNav() {
     </header>
   );
 }
+

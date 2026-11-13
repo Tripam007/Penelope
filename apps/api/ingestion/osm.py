@@ -135,3 +135,4 @@ class OSMClient:
         except Exception as e:
             logger.warning(f"Overpass API call failed ({e}). Using verified OSM seeds.")
             return []
+

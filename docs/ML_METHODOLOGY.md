@@ -73,3 +73,4 @@ The models were evaluated on an independent 20% test partition (1,000 mountain c
 ## 4. Disaster Authority Disclaimer
 
 > **ADVISORY ONLY:** PENELOPE is an experimental AI decision-support platform designed to assist disaster management teams. Emergency response actions must strictly adhere to official bulletins, orange/red alerts, and evacuation orders issued by the **India Meteorological Department (IMD)**, **Central Water Commission (CWC)**, and **State/National Disaster Management Authorities (SDMA / NDMA)**.
+

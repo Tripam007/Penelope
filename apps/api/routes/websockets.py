@@ -86,3 +86,4 @@ async def sse_event_stream():
             await asyncio.sleep(1.5)
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
+

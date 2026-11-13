@@ -149,3 +149,4 @@ class ModelMetricsReport(BaseModel):
     metrics: Dict[str, Any]
     feature_importances: Dict[str, float]
     disclaimer: str
+

@@ -77,3 +77,4 @@ def compute_proxy_flash_flood_label(features: Dict[str, Any]) -> int:
 
     # Threshold: Score >= 55 indicates flash flood conditions present
     return 1 if score >= 55.0 else 0
+

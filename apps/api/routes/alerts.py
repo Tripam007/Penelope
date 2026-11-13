@@ -85,3 +85,4 @@ def resolve_alert(alert_id: str, db: Session = Depends(get_db)):
     alert.status = "Resolved"
     db.commit()
     return {"status": "resolved", "alert_id": alert_id}
+

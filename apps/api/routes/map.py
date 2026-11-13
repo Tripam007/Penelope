@@ -133,3 +133,4 @@ def get_map_geojson_layers(db: Session = Depends(get_db)):
         "type": "FeatureCollection",
         "features": features
     }
+

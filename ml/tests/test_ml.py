@@ -116,3 +116,4 @@ def test_flood_risk_predictor(tmp_path):
     assert "1h" in res["horizons"]
     assert len(res["key_factors"]) > 0
     assert "advisory_disclaimer" in res
+

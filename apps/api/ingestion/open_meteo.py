@@ -125,3 +125,4 @@ class OpenMeteoClient:
         except Exception as e:
             logger.warning(f"Failed to fetch Open-Meteo elevation for ({lat}, {lon}): {e}")
             return 1200.0
+

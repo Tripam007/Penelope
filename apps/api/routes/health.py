@@ -49,3 +49,4 @@ def get_system_health(db: Session = Depends(get_db)):
         },
         "official_disclaimer": "Advisory only. Experimental AI flash-flood prediction. Follow official IMD/CWC/NDMA warnings."
     }
+

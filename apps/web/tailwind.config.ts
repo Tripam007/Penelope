@@ -9,6 +9,41 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: [
+          "Inter",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "SF Pro Display",
+          "SF Pro Text",
+          "Segoe UI",
+          "Roboto",
+          "sans-serif",
+        ],
+        mono: [
+          "ui-monospace",
+          "SFMono-Regular",
+          "Menlo",
+          "Monaco",
+          "Consolas",
+          "Liberation Mono",
+          "monospace",
+        ],
+      },
+      fontSize: {
+        "scale-12": ["12px", { lineHeight: "16px", letterSpacing: "0" }],
+        "scale-14": ["14px", { lineHeight: "20px", letterSpacing: "-0.006em" }],
+        "scale-16": ["16px", { lineHeight: "24px", letterSpacing: "-0.011em" }],
+        "scale-20": ["20px", { lineHeight: "28px", letterSpacing: "-0.017em" }],
+        "scale-28": ["28px", { lineHeight: "36px", letterSpacing: "-0.022em" }],
+        "scale-40": ["40px", { lineHeight: "48px", letterSpacing: "-0.025em" }],
+        "scale-64": ["64px", { lineHeight: "72px", letterSpacing: "-0.03em" }],
+      },
+      borderRadius: {
+        "glass-sm": "12px",
+        "glass-md": "20px",
+        "glass-lg": "28px",
+      },
       colors: {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
@@ -43,21 +78,31 @@ const config: Config = {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
-        // Flash-Flood Risk Levels
+        // Apple visionOS Risk Palette (accessible, colour-blind-safe)
         risk: {
-          low: "#10b981",       // Green
-          moderate: "#f59e0b",  // Amber
-          high: "#f97316",      // Orange
-          veryhigh: "#ef4444",  // Red
-        }
+          low: "#34C759",
+          moderate: "#FFD60A",
+          high: "#FF9F0A",
+          veryhigh: "#FF453A",
+          teal: "#2DD4BF",
+        },
       },
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+      boxShadow: {
+        "glass-1": "0 8px 32px 0 rgba(0, 0, 0, 0.25)",
+        "glass-2": "0 12px 40px 0 rgba(0, 0, 0, 0.35)",
+        "glass-3": "0 16px 48px 0 rgba(0, 0, 0, 0.45)",
+        "glass-light-1": "0 8px 32px 0 rgba(0, 0, 0, 0.08)",
+        "glass-light-2": "0 12px 40px 0 rgba(0, 0, 0, 0.12)",
+        "glass-light-3": "0 16px 48px 0 rgba(0, 0, 0, 0.16)",
+      },
+      backdropBlur: {
+        "glass-1": "24px",
+        "glass-2": "32px",
+        "glass-3": "40px",
       },
     },
   },
   plugins: [],
 };
+
 export default config;
