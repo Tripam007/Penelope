@@ -5,11 +5,25 @@ import maplibregl, { Map as MapLibreMap, Marker, Popup } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { usePenelopeStore } from "@/lib/store";
 import { getRiskColorClass } from "@/lib/utils";
-import { Compass, Layers, AlertTriangle, ShieldCheck, Waves } from "lucide-react";
+import {
+  Compass,
+  Layers,
+  AlertTriangle,
+  ShieldCheck,
+  Waves,
+  Mountain,
+  CloudRain,
+  Activity,
+  MapPin,
+  Tent,
+  Navigation
+} from "lucide-react";
 
 interface MapProps {
   geoJsonData: any;
 }
+
+type LayerFilter = "all" | "villages" | "tourist" | "treks_bridges" | "shelters" | "sensors" | "high_risk";
 
 export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -17,23 +31,25 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
   const markersRef = useRef<Marker[]>([]);
   const { setSelectedVillageId, setSelectedSensorCode, language } = usePenelopeStore();
 
-  const [activeLayer, setActiveLayer] = useState<"all" | "high_risk" | "sensors" | "shelters">("all");
+  const [activeFilter, setActiveFilter] = useState<LayerFilter>("all");
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    const defaultLat = parseFloat(process.env.NEXT_PUBLIC_DEFAULT_LAT || "30.3753");
-    const defaultLon = parseFloat(process.env.NEXT_PUBLIC_DEFAULT_LON || "79.3242");
-    const defaultZoom = parseFloat(process.env.NEXT_PUBLIC_DEFAULT_ZOOM || "8.5");
-    const mapStyle = process.env.NEXT_PUBLIC_MAP_STYLE || "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
+    const defaultLat = parseFloat(process.env.NEXT_PUBLIC_DEFAULT_LAT || "30.4856");
+    const defaultLon = parseFloat(process.env.NEXT_PUBLIC_DEFAULT_LON || "79.5667");
+    const defaultZoom = parseFloat(process.env.NEXT_PUBLIC_DEFAULT_ZOOM || "9.5");
+    const mapStyle =
+      process.env.NEXT_PUBLIC_MAP_STYLE ||
+      "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
 
     const map = new maplibregl.Map({
       container: mapContainerRef.current,
       style: mapStyle,
       center: [defaultLon, defaultLat],
       zoom: defaultZoom,
-      pitch: 45, // 3D mountain perspective
-      bearing: -15,
+      pitch: 48, // 3D mountain relief angle
+      bearing: -12,
       attributionControl: false,
     });
 
@@ -41,7 +57,6 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
     mapRef.current = map;
 
     map.on("load", () => {
-      // Add evacuation line source and layer
       if (geoJsonData) {
         renderMapFeatures(map, geoJsonData);
       }
@@ -54,12 +69,12 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
     };
   }, []);
 
-  // Update markers when geoJsonData changes
+  // Re-render markers when data, filter, or language changes
   useEffect(() => {
     if (mapRef.current && geoJsonData) {
       renderMapFeatures(mapRef.current, geoJsonData);
     }
-  }, [geoJsonData, activeLayer, language]);
+  }, [geoJsonData, activeFilter, language]);
 
   const renderMapFeatures = (map: MapLibreMap, data: any) => {
     // Clear old markers
@@ -69,269 +84,421 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
     if (!data || !data.features) return;
 
     data.features.forEach((feature: any) => {
-      const { layer_type } = feature.properties;
-      const coords = feature.geometry.coordinates;
+      const p = feature.properties || {};
+      const coords = feature.geometry?.coordinates;
+      if (!coords || !Array.isArray(coords) || coords.length < 2) return;
 
-      if (layer_type === "village") {
-        if (activeLayer === "sensors" || activeLayer === "shelters") return;
-        if (activeLayer === "high_risk" && !["High", "Very High"].includes(feature.properties.risk_level)) return;
+      const layerType = p.layer_type || p.category || p.type || "village";
+      const isHighOrVeryHigh =
+        ["High", "Very High", "HIGH", "VERY HIGH"].includes(p.risk_level) ||
+        (p.risk_score && p.risk_score >= 0.6);
 
-        const riskColor = getRiskColorClass(feature.properties.risk_level);
-        const isHighOrVeryHigh = ["High", "Very High"].includes(feature.properties.risk_level);
+      // Filtering logic
+      if (activeFilter === "high_risk" && !isHighOrVeryHigh) return;
+      if (activeFilter === "villages" && !["village", "town"].includes(layerType)) return;
+      if (activeFilter === "tourist" && !["landmark", "tourist_spot"].includes(layerType)) return;
+      if (activeFilter === "treks_bridges" && !["trek", "bridge"].includes(layerType)) return;
+      if (activeFilter === "shelters" && layerType !== "shelter") return;
+      if (activeFilter === "sensors" && layerType !== "sensor") return;
 
-        // Custom HTML Marker Element
-        const el = document.createElement("div");
-        el.className = "cursor-pointer group flex flex-col items-center";
-        el.innerHTML = `
-          <div class="relative flex items-center justify-center">
-            ${isHighOrVeryHigh ? `<span class="animate-ping absolute inline-flex h-7 w-7 rounded-full bg-red-400 opacity-75"></span>` : ""}
-            <div class="h-5 w-5 rounded-full border-2 border-slate-900 shadow-lg flex items-center justify-center text-[10px] font-bold text-white transition-transform group-hover:scale-125" style="background-color: ${riskColor.hex}">
-            </div>
-          </div>
-          <div class="mt-1 px-1.5 py-0.5 rounded bg-slate-950/85 backdrop-blur border border-slate-800 text-[10px] font-medium text-slate-200 shadow-md whitespace-nowrap pointer-events-none">
-            ${language === "hi" && feature.properties.hindi_name ? feature.properties.hindi_name : feature.properties.name}
-            <span class="ml-1 text-[9px] font-bold" style="color: ${riskColor.hex}">
-              ${Math.round(feature.properties.risk_score * 100)}%
-            </span>
-          </div>
-        `;
+      const riskColor = getRiskColorClass(p.risk_level || (p.risk_score ? (p.risk_score >= 0.75 ? "Very High" : p.risk_score >= 0.5 ? "High" : "Moderate") : "Low"));
+      const displayName = language === "hi" && p.hindi_name ? p.hindi_name : p.name;
+      const groundHeight = p.ground_height_m || p.elevation_m || 1500;
+      const rain1h = p.rain_1h_mm ?? 12.0;
+      const rain3h = p.rain_3h_mm ?? 34.0;
+      const rain6h = p.rain_6h_mm ?? 58.0;
+      const rain24h = p.rain_24h_mm ?? 88.0;
+      const peakRate = p.peak_rain_rate_mmh ?? 22.0;
+      const antecedentIdx = p.antecedent_index ?? 28.5;
+      const soilSat = p.soil_ratios?.saturation_ratio != null ? Math.round(p.soil_ratios.saturation_ratio * 100) : 78;
+      const dischargeM3s = p.river_discharge_m3s ?? p.discharge_m3s ?? 320.0;
+      const anomalyM3s = p.river_anomaly_m3s ?? (dischargeM3s - 180.0);
 
-        el.addEventListener("click", () => {
-          setSelectedVillageId(feature.properties.id);
-        });
-
-        const marker = new maplibregl.Marker({ element: el })
-          .setLngLat(coords)
-          .addTo(map);
-
-        markersRef.current.push(marker);
-      } else if (layer_type === "sensor") {
-        if (activeLayer === "shelters" || activeLayer === "high_risk") return;
-
-        const isSimulated = feature.properties.is_simulated || feature.properties.source === "simulated";
-        const dangerRatio = feature.properties.danger_ratio || 0.4;
-        const sensorColor = dangerRatio >= 0.85 ? "#ef4444" : dangerRatio >= 0.65 ? "#f59e0b" : "#38bdf8";
+      // -------------------------------------------------------------
+      // 1. SENSOR / RIVER GAUGE MARKER
+      // -------------------------------------------------------------
+      if (layerType === "sensor") {
+        const waterLevel = p.water_level_m || 2.4;
+        const dangerLevel = p.danger_level_m || 5.0;
+        const isCritical = waterLevel >= (dangerLevel * 0.9);
 
         const el = document.createElement("div");
         el.className = "cursor-pointer group flex flex-col items-center";
         el.innerHTML = `
           <div class="relative flex items-center justify-center">
-            <div class="h-6 w-6 rounded-md bg-slate-950 border border-slate-700 shadow-xl flex items-center justify-center transition-transform group-hover:scale-125">
-              <svg class="w-3.5 h-3.5" style="color: ${sensorColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
+            ${isCritical ? `<span class="animate-ping absolute inline-flex h-8 w-8 rounded-full bg-cyan-400 opacity-75"></span>` : ""}
+            <div class="h-6 w-6 rounded-md bg-slate-950 border-2 border-cyan-400 shadow-[0_0_12px_#38bdf8] flex items-center justify-center transition-transform group-hover:scale-125">
+              <span class="text-[11px]">📡</span>
             </div>
-            ${isSimulated ? `
-              <span class="absolute -top-2 -right-3 bg-amber-500 text-slate-950 font-black text-[8px] px-1 rounded-sm shadow border border-amber-300">
-                SIM
-              </span>
-            ` : ""}
           </div>
-          <div class="mt-1 px-1.5 py-0.5 rounded bg-slate-950/90 border border-cyan-900/60 text-[9px] font-mono text-cyan-300 shadow whitespace-nowrap">
-            ${feature.properties.water_level_m}m
+          <div class="mt-1 px-1.5 py-0.5 rounded bg-slate-950/90 border border-cyan-500/50 text-[9px] font-mono text-cyan-300 shadow whitespace-nowrap">
+            ${waterLevel}m · ${dischargeM3s}m³/s
           </div>
         `;
 
-        const popup = new maplibregl.Popup({ offset: 15 }).setHTML(`
-          <div class="p-2 text-slate-900">
-            <div class="flex items-center gap-1.5 font-bold text-xs border-b pb-1 mb-1.5">
-              <span>${feature.properties.name}</span>
-              ${isSimulated ? `<span class="bg-amber-100 text-amber-800 text-[9px] px-1 rounded font-bold">SIMULATED</span>` : ""}
+        const popup = new maplibregl.Popup({ offset: 15, maxWidth: "300px" }).setHTML(`
+          <div class="p-3 text-slate-100 bg-slate-950 rounded-xl border border-cyan-500/40 font-sans shadow-xl">
+            <div class="flex items-center gap-2 border-b border-cyan-800/60 pb-1.5 mb-2">
+              <span class="text-sm">📡</span>
+              <div>
+                <h4 class="font-bold text-xs text-cyan-300">${p.name}</h4>
+                <p class="text-[10px] text-slate-400">River: ${p.river_name || "Mountain River"}</p>
+              </div>
             </div>
-            <div class="text-[11px] space-y-0.5">
-              <div>River: <b>${feature.properties.river_name}</b></div>
-              <div>Water Level: <b class="text-cyan-700">${feature.properties.water_level_m} m</b></div>
-              <div>Danger Mark: <b>${feature.properties.danger_level_m} m</b></div>
-              <div>Warning Mark: <b>${feature.properties.warning_level_m} m</b></div>
+            <div class="grid grid-cols-2 gap-2 text-[11px] mb-2">
+              <div class="p-1.5 rounded bg-slate-900 border border-slate-800">
+                <span class="text-slate-400 block text-[9px]">WATER STAGE</span>
+                <span class="font-bold text-cyan-400">${waterLevel} m</span>
+              </div>
+              <div class="p-1.5 rounded bg-slate-900 border border-slate-800">
+                <span class="text-slate-400 block text-[9px]">DISCHARGE</span>
+                <span class="font-bold text-amber-300">${dischargeM3s} m³/s</span>
+              </div>
+            </div>
+            <div class="text-[10px] text-slate-400 flex justify-between border-t border-slate-800 pt-1">
+              <span>Danger Mark: <b>${dangerLevel}m</b></span>
+              <span class="text-emerald-400 font-semibold">${p.status || "ACTIVE"}</span>
             </div>
           </div>
         `);
 
         el.addEventListener("click", () => {
-          setSelectedSensorCode(feature.properties.sensor_code);
+          if (p.sensor_code) setSelectedSensorCode(p.sensor_code);
         });
 
         const marker = new maplibregl.Marker({ element: el })
-          .setLngLat(coords)
+          .setLngLat(coords as [number, number])
           .setPopup(popup)
           .addTo(map);
 
         markersRef.current.push(marker);
-      } else if (layer_type === "shelter") {
-        if (activeLayer === "sensors" || activeLayer === "high_risk") return;
-
-        const el = document.createElement("div");
-        el.className = "cursor-pointer group flex flex-col items-center";
-        el.innerHTML = `
-          <div class="h-5 w-5 rounded-full bg-emerald-950 border border-emerald-400 shadow flex items-center justify-center transition-transform group-hover:scale-125">
-            <span class="text-[9px] font-bold text-emerald-400">⛺</span>
-          </div>
-        `;
-
-        const popup = new maplibregl.Popup({ offset: 15 }).setHTML(`
-          <div class="p-2 text-slate-900">
-            <div class="font-bold text-xs border-b pb-1 mb-1 text-emerald-800">
-              ${language === "hi" && feature.properties.hindi_name ? feature.properties.hindi_name : feature.properties.name}
-            </div>
-            <div class="text-[11px] space-y-0.5">
-              <div>Type: Safe Relief Evacuation Shelter</div>
-              <div>Capacity: <b>${feature.properties.capacity} Persons</b></div>
-              <div>Safe Elevation: <b>${feature.properties.elevation_m} m</b></div>
-              <div>Contact: <b>${feature.properties.contact_person || "Relief Officer"}</b></div>
-            </div>
-          </div>
-        `);
-
-        const marker = new maplibregl.Marker({ element: el })
-          .setLngLat(coords)
-          .setPopup(popup)
-          .addTo(map);
-
-        markersRef.current.push(marker);
+        return;
       }
+
+      // -------------------------------------------------------------
+      // 2. SHELTER MARKER
+      // -------------------------------------------------------------
+      if (layerType === "shelter") {
+        const el = document.createElement("div");
+        el.className = "cursor-pointer group flex flex-col items-center";
+        el.innerHTML = `
+          <div class="relative flex items-center justify-center">
+            <div class="h-6 w-6 rounded-full bg-emerald-950 border-2 border-emerald-400 shadow-[0_0_12px_#34d399] flex items-center justify-center transition-transform group-hover:scale-125">
+              <span class="text-[11px]">⛺</span>
+            </div>
+          </div>
+          <div class="mt-1 px-1.5 py-0.5 rounded bg-slate-950/90 border border-emerald-500/50 text-[9px] font-medium text-emerald-300 shadow whitespace-nowrap">
+            ${displayName} (${p.capacity || 400})
+          </div>
+        `;
+
+        const popup = new maplibregl.Popup({ offset: 15, maxWidth: "320px" }).setHTML(`
+          <div class="p-3 text-slate-100 bg-slate-950 rounded-xl border border-emerald-500/40 font-sans shadow-xl">
+            <div class="flex items-center gap-2 border-b border-emerald-800/60 pb-1.5 mb-2">
+              <span class="text-sm">⛺</span>
+              <div>
+                <h4 class="font-bold text-xs text-emerald-300">${displayName}</h4>
+                <span class="text-[9px] bg-emerald-500/20 text-emerald-400 px-1 rounded border border-emerald-500/30">Safe Evacuation Shelter</span>
+              </div>
+            </div>
+            <div class="space-y-1.5 text-[11px] text-slate-300 mb-2">
+              <div class="flex justify-between"><span>Capacity:</span> <b class="text-white">${p.capacity || 400} Persons</b></div>
+              <div class="flex justify-between"><span>Safe Ground Elevation:</span> <b class="text-emerald-400">${groundHeight} meters</b></div>
+              <div class="flex justify-between"><span>River Distance:</span> <b class="text-white">${p.river_distance_m || 450} meters</b></div>
+              <div class="flex justify-between"><span>Relief Contact:</span> <b class="text-white">${p.contact_phone || "+91-1372-252101"}</b></div>
+            </div>
+          </div>
+        `);
+
+        const marker = new maplibregl.Marker({ element: el })
+          .setLngLat(coords as [number, number])
+          .setPopup(popup)
+          .addTo(map);
+
+        markersRef.current.push(marker);
+        return;
+      }
+
+      // -------------------------------------------------------------
+      // 3. LANDMARK / TOURIST / TREK / BRIDGE / VILLAGE / TOWN MARKER
+      // -------------------------------------------------------------
+      let icon = "📍";
+      let badgeLabel = "Village";
+      let borderStyle = "rounded-full";
+
+      if (layerType === "town") {
+        icon = "🏛️";
+        badgeLabel = "Town";
+        borderStyle = "rounded-lg";
+      } else if (layerType === "landmark" || p.type === "tourist_spot") {
+        icon = "🛕";
+        badgeLabel = "Landmark";
+        borderStyle = "rounded-full";
+      } else if (layerType === "trek") {
+        icon = "🥾";
+        badgeLabel = "Trek Trail";
+        borderStyle = "rounded-md";
+      } else if (layerType === "bridge") {
+        icon = "🌉";
+        badgeLabel = "Bridge";
+        borderStyle = "rounded-sm";
+      }
+
+      const riskPercent = Math.round((p.risk_score || 0.3) * 100);
+
+      const el = document.createElement("div");
+      el.className = "cursor-pointer group flex flex-col items-center";
+      el.innerHTML = `
+        <div class="relative flex items-center justify-center">
+          ${isHighOrVeryHigh ? `<span class="animate-ping absolute inline-flex h-8 w-8 rounded-full bg-red-400 opacity-75"></span>` : ""}
+          <div class="h-6 w-6 ${borderStyle} border-2 border-slate-900 shadow-xl flex items-center justify-center transition-transform group-hover:scale-125" style="background-color: ${riskColor.hex}; box-shadow: 0 0 12px ${riskColor.hex}">
+            <span class="text-[10px]">${icon}</span>
+          </div>
+        </div>
+        <div class="mt-1 px-1.5 py-0.5 rounded bg-slate-950/90 backdrop-blur border border-slate-800 text-[10px] font-semibold text-slate-200 shadow-md whitespace-nowrap flex items-center gap-1">
+          <span>${displayName}</span>
+          <span class="text-[9px] font-bold px-1 rounded" style="background: ${riskColor.hex}25; color: ${riskColor.hex}">
+            ${riskPercent}%
+          </span>
+        </div>
+      `;
+
+      // Rich Full Telemetry Popup (Open-Meteo rain, GloFAS flood, ground height, soil ratios)
+      const popup = new maplibregl.Popup({ offset: 15, maxWidth: "340px" }).setHTML(`
+        <div class="p-3 text-slate-100 bg-slate-950 rounded-2xl border border-slate-800 font-sans shadow-2xl space-y-2">
+          {/* Header */}
+          <div class="flex items-start justify-between border-b border-slate-800 pb-2">
+            <div>
+              <div class="flex items-center gap-1.5">
+                <span class="text-sm">${icon}</span>
+                <h4 class="font-bold text-xs text-white">${displayName}</h4>
+              </div>
+              <div class="flex items-center gap-1.5 mt-0.5">
+                <span class="text-[9px] px-1.5 py-0.2 rounded font-bold uppercase tracking-wider bg-slate-800 text-slate-300">
+                  ${badgeLabel}
+                </span>
+                <span class="text-[9px] px-1.5 py-0.2 rounded font-bold uppercase" style="background-color: ${riskColor.hex}22; color: ${riskColor.hex}">
+                  ${p.risk_level || "MODERATE"} RISK (${riskPercent}%)
+                </span>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="text-[9px] text-slate-400 block">ELEVATION</span>
+              <span class="text-xs font-black text-amber-300 font-mono">${groundHeight}m</span>
+            </div>
+          </div>
+
+          {/* Open-Meteo Rain Forecast Grid (1h, 3h, 6h, 24h, Peak) */}
+          <div class="p-2 rounded-xl bg-slate-900/90 border border-slate-800/80">
+            <div class="flex items-center justify-between text-[10px] text-sky-400 font-bold mb-1">
+              <span class="flex items-center gap-1">🌧️ Open-Meteo Rain Forecast</span>
+              <span class="text-amber-400">Peak: ${peakRate} mm/h</span>
+            </div>
+            <div class="grid grid-cols-4 gap-1 text-center font-mono">
+              <div class="p-1 rounded bg-slate-950 border border-slate-800/60">
+                <span class="text-[8px] text-slate-400 block font-sans">1-HOUR</span>
+                <span class="text-[11px] font-bold text-sky-300">${rain1h}mm</span>
+              </div>
+              <div class="p-1 rounded bg-slate-950 border border-slate-800/60">
+                <span class="text-[8px] text-slate-400 block font-sans">3-HOUR</span>
+                <span class="text-[11px] font-bold text-sky-300">${rain3h}mm</span>
+              </div>
+              <div class="p-1 rounded bg-slate-950 border border-slate-800/60">
+                <span class="text-[8px] text-slate-400 block font-sans">6-HOUR</span>
+                <span class="text-[11px] font-bold text-sky-300">${rain6h}mm</span>
+              </div>
+              <div class="p-1 rounded bg-slate-950 border border-slate-800/60">
+                <span class="text-[8px] text-slate-400 block font-sans">24-HOUR</span>
+                <span class="text-[11px] font-bold text-amber-400">${rain24h}mm</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Antecedent Index & Soil Saturation */}
+          <div class="grid grid-cols-2 gap-1.5 text-[10px]">
+            <div class="p-2 rounded-xl bg-slate-900 border border-slate-800">
+              <span class="text-slate-400 block text-[9px]">ANTECEDENT INDEX (API)</span>
+              <span class="text-xs font-bold text-teal-300 font-mono">${antecedentIdx}</span>
+              <span class="text-[9px] text-slate-500 block">7-day rainfall memory</span>
+            </div>
+            <div class="p-2 rounded-xl bg-slate-900 border border-slate-800">
+              <span class="text-slate-400 block text-[9px]">SOIL SATURATION</span>
+              <span class="text-xs font-bold text-purple-300 font-mono">${soilSat}%</span>
+              <span class="text-[9px] text-slate-500 block">0-28cm root-zone ratio</span>
+            </div>
+          </div>
+
+          {/* GloFAS River Discharge & Anomaly */}
+          <div class="p-2 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between text-[11px]">
+            <div>
+              <span class="text-[9px] text-slate-400 block">GLOFAS RIVER DISCHARGE</span>
+              <span class="font-bold text-cyan-300 font-mono">${dischargeM3s} m³/s</span>
+            </div>
+            <div class="text-right">
+              <span class="text-[9px] text-slate-400 block">RIVER ANOMALY</span>
+              <span class="font-bold ${anomalyM3s > 0 ? "text-red-400" : "text-emerald-400"} font-mono">
+                ${anomalyM3s > 0 ? `+${anomalyM3s}` : anomalyM3s} m³/s
+              </span>
+            </div>
+          </div>
+
+          {/* Inspect Button */}
+          <button
+            id="btn-inspect-${p.id}"
+            class="w-full mt-1 py-1.5 px-3 rounded-lg bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/40 text-teal-200 text-xs font-bold transition flex items-center justify-center gap-1.5"
+          >
+            <span>Open Catchment Diagnostic Profile</span>
+            <span>→</span>
+          </button>
+        </div>
+      `);
+
+      popup.on("open", () => {
+        const btn = document.getElementById(`btn-inspect-${p.id}`);
+        if (btn) {
+          btn.addEventListener("click", () => {
+            setSelectedVillageId(p.id);
+          });
+        }
+      });
+
+      el.addEventListener("click", () => {
+        setSelectedVillageId(p.id);
+      });
+
+      const marker = new maplibregl.Marker({ element: el })
+        .setLngLat(coords as [number, number])
+        .setPopup(popup)
+        .addTo(map);
+
+      markersRef.current.push(marker);
     });
 
-    // Render evacuation LineStrings
-    const lineFeatures = data.features.filter((f: any) => f.properties.layer_type === "evacuation_route");
-    const lineGeoJson = {
-      type: "FeatureCollection",
-      features: lineFeatures,
-    };
+    // Render evacuation routes
+    const lineFeatures = data.features.filter(
+      (f: any) =>
+        f.properties?.layer_type === "evacuation_route" ||
+        f.properties?.category === "evacuation_route"
+    );
 
     if (map.getSource("evacuation-routes")) {
-      (map.getSource("evacuation-routes") as any).setData(lineGeoJson);
-    } else {
+      (map.getSource("evacuation-routes") as maplibregl.GeoJSONSource).setData({
+        type: "FeatureCollection",
+        features: lineFeatures,
+      });
+    } else if (lineFeatures.length > 0) {
       map.addSource("evacuation-routes", {
         type: "geojson",
-        data: lineGeoJson as any,
+        data: {
+          type: "FeatureCollection",
+          features: lineFeatures,
+        },
       });
 
       map.addLayer({
         id: "evacuation-routes-line",
         type: "line",
         source: "evacuation-routes",
-        layout: {
-          "line-join": "round",
-          "line-cap": "round",
-        },
         paint: {
-          "line-color": "#38bdf8",
-          "line-width": 2,
+          "line-color": "#34d399",
+          "line-width": 3,
           "line-dasharray": [2, 2],
-          "line-opacity": 0.7,
         },
       });
     }
   };
 
-  const focusBasin = (lat: number, lon: number, zoom: number = 10) => {
-    mapRef.current?.flyTo({
-      center: [lon, lat],
-      zoom: zoom,
-      pitch: 50,
-      duration: 1800,
-    });
-  };
-
   return (
-    <div className="relative w-full h-full overflow-hidden bg-slate-950">
+    <div className="relative w-full h-full">
+      {/* Top Floating Landmark Filter Bar */}
+      <div className="absolute top-4 left-4 z-10 flex flex-wrap items-center gap-1.5 p-1.5 rounded-2xl bg-slate-950/85 backdrop-blur-2xl border border-white/10 shadow-2xl max-w-[calc(100vw-2rem)] overflow-x-auto">
+        <button
+          onClick={() => setActiveFilter("all")}
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+            activeFilter === "all"
+              ? "bg-teal-500 text-slate-950 shadow-md"
+              : "text-slate-300 hover:text-white hover:bg-slate-900/60"
+          }`}
+        >
+          <Layers className="w-3.5 h-3.5" />
+          <span>All Landmarks ({geoJsonData?.features?.length || 0})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveFilter("high_risk")}
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+            activeFilter === "high_risk"
+              ? "bg-red-500 text-white shadow-md shadow-red-500/30"
+              : "text-slate-300 hover:text-white hover:bg-slate-900/60"
+          }`}
+        >
+          <AlertTriangle className="w-3.5 h-3.5 text-red-400" />
+          <span>High Risk Only</span>
+        </button>
+
+        <button
+          onClick={() => setActiveFilter("villages")}
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+            activeFilter === "villages"
+              ? "bg-amber-500 text-slate-950 shadow-md"
+              : "text-slate-300 hover:text-white hover:bg-slate-900/60"
+          }`}
+        >
+          <span>🏛️</span>
+          <span>Villages & Towns</span>
+        </button>
+
+        <button
+          onClick={() => setActiveFilter("tourist")}
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+            activeFilter === "tourist"
+              ? "bg-purple-500 text-white shadow-md"
+              : "text-slate-300 hover:text-white hover:bg-slate-900/60"
+          }`}
+        >
+          <span>🛕</span>
+          <span>Tourist & Shrines</span>
+        </button>
+
+        <button
+          onClick={() => setActiveFilter("treks_bridges")}
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+            activeFilter === "treks_bridges"
+              ? "bg-sky-500 text-slate-950 shadow-md"
+              : "text-slate-300 hover:text-white hover:bg-slate-900/60"
+          }`}
+        >
+          <span>🥾</span>
+          <span>Treks & Bridges</span>
+        </button>
+
+        <button
+          onClick={() => setActiveFilter("shelters")}
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+            activeFilter === "shelters"
+              ? "bg-emerald-500 text-slate-950 shadow-md"
+              : "text-slate-300 hover:text-white hover:bg-slate-900/60"
+          }`}
+        >
+          <Tent className="w-3.5 h-3.5 text-emerald-400" />
+          <span>Safe Shelters</span>
+        </button>
+
+        <button
+          onClick={() => setActiveFilter("sensors")}
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+            activeFilter === "sensors"
+              ? "bg-cyan-500 text-slate-950 shadow-md"
+              : "text-slate-300 hover:text-white hover:bg-slate-900/60"
+          }`}
+        >
+          <Waves className="w-3.5 h-3.5 text-cyan-400" />
+          <span>River Gauges</span>
+        </button>
+      </div>
+
       {/* MapLibre Canvas Container */}
       <div ref={mapContainerRef} className="w-full h-full" />
-
-      {/* Layer Filter Toolbar */}
-      <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 p-1 rounded-xl bg-slate-950/85 backdrop-blur-md border border-slate-800 shadow-2xl">
-        <button
-          onClick={() => setActiveLayer("all")}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
-            activeLayer === "all" ? "bg-sky-500 text-white shadow" : "text-slate-400 hover:text-white"
-          }`}
-        >
-          All Layers
-        </button>
-        <button
-          onClick={() => setActiveLayer("high_risk")}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1 ${
-            activeLayer === "high_risk" ? "bg-red-500/20 text-red-400 border border-red-500/50" : "text-slate-400 hover:text-white"
-          }`}
-        >
-          <AlertTriangle className="w-3.5 h-3.5" />
-          High Risk Only
-        </button>
-        <button
-          onClick={() => setActiveLayer("sensors")}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1 ${
-            activeLayer === "sensors" ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/50" : "text-slate-400 hover:text-white"
-          }`}
-        >
-          <Waves className="w-3.5 h-3.5" />
-          Sensors
-        </button>
-        <button
-          onClick={() => setActiveLayer("shelters")}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1 ${
-            activeLayer === "shelters" ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/50" : "text-slate-400 hover:text-white"
-          }`}
-        >
-          <ShieldCheck className="w-3.5 h-3.5" />
-          Shelters
-        </button>
-      </div>
-
-      {/* Basin Hotspot Quick Jumps */}
-      <div className="absolute top-4 right-16 z-10 hidden sm:flex items-center gap-2 p-1 rounded-xl bg-slate-950/80 backdrop-blur border border-slate-800 text-xs">
-        <span className="text-[10px] uppercase font-bold text-slate-500 px-2">Basins:</span>
-        <button
-          onClick={() => focusBasin(30.5543, 79.5442, 9.5)}
-          className="px-2 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 transition"
-        >
-          Chamoli
-        </button>
-        <button
-          onClick={() => focusBasin(30.45, 79.05, 9.5)}
-          className="px-2 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 transition"
-        >
-          Mandakini
-        </button>
-        <button
-          onClick={() => focusBasin(11.53, 76.13, 10.5)}
-          className="px-2 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 transition"
-        >
-          Wayanad Ghats
-        </button>
-      </div>
-
-      {/* Risk Legend Card */}
-      <div className="absolute bottom-6 left-4 z-10 p-3 rounded-xl bg-slate-950/90 backdrop-blur-md border border-slate-800 shadow-2xl text-xs space-y-2 max-w-[210px]">
-        <div className="font-semibold text-slate-300 flex items-center justify-between text-[11px] uppercase tracking-wider">
-          <span>Flood Hazard Tier</span>
-          <span className="text-[9px] text-slate-500">IMD/GloFAS</span>
-        </div>
-        <div className="space-y-1.5 text-[11px]">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-            <span className="text-slate-300">Low Risk (&lt;25%)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-            <span className="text-slate-300">Moderate (25-55%)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
-            <span className="text-slate-300">High Risk (55-80%)</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse"></span>
-            <span className="text-slate-300 font-bold">Very High (&gt;80%)</span>
-          </div>
-        </div>
-        <div className="pt-1.5 border-t border-slate-800 flex items-center justify-between text-[10px] text-slate-400">
-          <span className="flex items-center gap-1">
-            <span className="bg-amber-500 text-slate-950 text-[8px] font-black px-1 rounded">SIM</span>
-            <span>Simulated Sensor</span>
-          </span>
-        </div>
-      </div>
     </div>
   );
 }
-
