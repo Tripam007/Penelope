@@ -51,7 +51,7 @@ export default function VillageRiskDrawer() {
   const groundHeight = village?.ground_height_m || village?.elevation_m || 1875.0;
 
   return (
-    <div className="absolute top-20 right-4 z-20 w-full max-w-md bg-slate-950/95 backdrop-blur-2xl border border-slate-800 rounded-2xl shadow-2xl overflow-hidden transition-all duration-300">
+    <div className="absolute top-20 right-4 z-50 w-full max-w-md bg-slate-950/90 backdrop-blur-3xl border border-teal-500/30 rounded-2xl shadow-[0_30px_70px_-15px_rgba(0,0,0,0.95),0_0_50px_rgba(45,212,191,0.25)] overflow-hidden transition-all duration-500" style={{ animation: "modernMotionCardEntrance 0.38s cubic-bezier(0.16, 1, 0.3, 1) both" }}>
       {/* Header */}
       <div className="p-4 border-b border-slate-800/80 flex items-start justify-between">
         <div>

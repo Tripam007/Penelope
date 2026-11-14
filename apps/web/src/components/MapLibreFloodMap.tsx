@@ -29,7 +29,11 @@ interface MapProps {
 
 type LayerFilter = "all" | "villages" | "tourist" | "treks_bridges" | "shelters" | "sensors" | "high_risk";
 
-function createFrostedPopup(maxWidth: string = "340px"): Popup {
+function createFrostedPopup(
+  maxWidth: string = "340px",
+  onOpen?: () => void,
+  onClose?: () => void
+): Popup {
   const popup = new maplibregl.Popup({
     offset: 15,
     maxWidth,
@@ -37,6 +41,7 @@ function createFrostedPopup(maxWidth: string = "340px"): Popup {
   });
 
   popup.on("open", () => {
+    onOpen?.();
     const el = popup.getElement();
     if (el) {
       const content = el.querySelector(".maplibregl-popup-content") as HTMLElement | null;
@@ -58,6 +63,10 @@ function createFrostedPopup(maxWidth: string = "340px"): Popup {
     }
   });
 
+  popup.on("close", () => {
+    onClose?.();
+  });
+
   return popup;
 }
 
@@ -67,7 +76,10 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
   const markersRef = useRef<Marker[]>([]);
   const liveClickMarkerRef = useRef<Marker | null>(null);
 
-  const { setSelectedVillageId, setSelectedSensorCode, language } = usePenelopeStore();
+  const { selectedVillageId, setSelectedVillageId, setSelectedSensorCode, language } = usePenelopeStore();
+
+  const [activePopupOpen, setActivePopupOpen] = useState(false);
+  const isShowingDetails = Boolean(activePopupOpen || selectedVillageId);
 
   const [activeFilter, setActiveFilter] = useState<LayerFilter>("all");
   const [selectedRegionId, setSelectedRegionId] = useState<string>("all-india");
@@ -141,7 +153,17 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
 
         const riskColor = getRiskColorClass(liveData.risk_level);
 
-        const popup = createFrostedPopup("340px").setHTML(`
+        const popup = createFrostedPopup(
+          "340px",
+          () => {
+            setActivePopupOpen(true);
+            el.classList.add("active-focused-marker");
+          },
+          () => {
+            setActivePopupOpen(false);
+            el.classList.remove("active-focused-marker");
+          }
+        ).setHTML(`
           <div class="p-3.5 text-slate-100 bg-slate-950/80 backdrop-blur-2xl rounded-2xl border border-teal-500/40 font-sans shadow-[0_20px_50px_rgba(0,0,0,0.85)] space-y-2.5">
             <div class="flex items-start justify-between border-b border-white/10 pb-2">
               <div>
@@ -315,7 +337,17 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
           </div>
         `;
 
-        const popup = createFrostedPopup("320px").setHTML(`
+        const popup = createFrostedPopup(
+          "320px",
+          () => {
+            setActivePopupOpen(true);
+            el.classList.add("active-focused-marker");
+          },
+          () => {
+            setActivePopupOpen(false);
+            el.classList.remove("active-focused-marker");
+          }
+        ).setHTML(`
           <div class="p-3.5 text-slate-100 bg-slate-950/80 backdrop-blur-2xl rounded-2xl border border-cyan-500/40 font-sans shadow-[0_20px_50px_rgba(0,0,0,0.85)] space-y-2.5">
             <div class="flex items-center gap-2 border-b border-white/10 pb-2 mb-1">
               <span class="text-sm">📡</span>
@@ -369,7 +401,17 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
           </div>
         `;
 
-        const popup = createFrostedPopup("340px").setHTML(`
+        const popup = createFrostedPopup(
+          "340px",
+          () => {
+            setActivePopupOpen(true);
+            el.classList.add("active-focused-marker");
+          },
+          () => {
+            setActivePopupOpen(false);
+            el.classList.remove("active-focused-marker");
+          }
+        ).setHTML(`
           <div class="p-3.5 text-slate-100 bg-slate-950/80 backdrop-blur-2xl rounded-2xl border border-emerald-500/40 font-sans shadow-[0_20px_50px_rgba(0,0,0,0.85)] space-y-2.5">
             <div class="flex items-center gap-2 border-b border-white/10 pb-2 mb-1">
               <span class="text-sm">⛺</span>
@@ -437,7 +479,17 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
         </div>
       `;
 
-      const popup = createFrostedPopup("340px").setHTML(`
+      const popup = createFrostedPopup(
+        "340px",
+        () => {
+          setActivePopupOpen(true);
+          el.classList.add("active-focused-marker");
+        },
+        () => {
+          setActivePopupOpen(false);
+          el.classList.remove("active-focused-marker");
+        }
+      ).setHTML(`
         <div class="p-3.5 text-slate-100 bg-slate-950/80 backdrop-blur-2xl rounded-2xl border border-white/15 font-sans shadow-[0_20px_50px_rgba(0,0,0,0.85)] space-y-2.5">
           <div class="flex items-start justify-between border-b border-white/10 pb-2">
             <div>
@@ -519,9 +571,6 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
             <span>→</span>
           </button>
         </div>
-            <span>→</span>
-          </button>
-        </div>
       `);
 
       popup.on("open", () => {
@@ -547,9 +596,11 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
   };
 
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-full overflow-hidden">
       {/* 1. Top Real-Time India Region Quick Jump Bar */}
-      <div className="absolute top-3 left-4 z-10 flex items-center gap-1.5 p-1 rounded-2xl bg-slate-950/90 backdrop-blur-2xl border border-white/15 shadow-2xl max-w-[calc(100vw-3rem)] overflow-x-auto scrollbar-none">
+      <div className={`absolute top-3 left-4 z-10 flex items-center gap-1.5 p-1 rounded-2xl bg-slate-950/90 backdrop-blur-2xl border border-white/15 shadow-2xl max-w-[calc(100vw-3rem)] overflow-x-auto scrollbar-none transition-all duration-500 ease-out ${
+        isShowingDetails ? "opacity-25 blur-[2px] pointer-events-none scale-[0.98]" : "opacity-100 blur-0 scale-100"
+      }`}>
         <span className="text-[10px] font-bold text-teal-400 uppercase tracking-wider px-2 flex items-center gap-1 shrink-0">
           <Globe className="w-3.5 h-3.5" />
           <span>India Regions:</span>
@@ -578,7 +629,9 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
       </div>
 
       {/* 2. Secondary Filter Bar (All Landmarks, High Risk, Villages, Tourist, Shelters) */}
-      <div className="absolute top-14 left-4 z-10 flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-slate-950/80 backdrop-blur-xl border border-white/10 shadow-xl max-w-[calc(100vw-3rem)] overflow-x-auto">
+      <div className={`absolute top-14 left-4 z-10 flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-slate-950/80 backdrop-blur-xl border border-white/10 shadow-xl max-w-[calc(100vw-3rem)] overflow-x-auto transition-all duration-500 ease-out ${
+        isShowingDetails ? "opacity-25 blur-[2px] pointer-events-none scale-[0.98]" : "opacity-100 blur-0 scale-100"
+      }`}>
         <button
           onClick={() => setActiveFilter("all")}
           className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 ${
@@ -655,7 +708,9 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
       </div>
 
       {/* 3. Bottom Live Status Indicator & Click Instruction */}
-      <div className="absolute bottom-4 left-4 z-10 flex items-center gap-3">
+      <div className={`absolute bottom-4 left-4 z-10 flex items-center gap-3 transition-all duration-500 ease-out ${
+        isShowingDetails ? "opacity-20 blur-[2px] pointer-events-none" : "opacity-100 blur-0"
+      }`}>
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950/85 backdrop-blur-xl border border-teal-500/30 text-[11px] font-medium text-slate-200 shadow-xl">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" />
           <span className="font-bold text-teal-300">REAL-TIME INDIA NETWORK</span>
@@ -671,8 +726,11 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
         )}
       </div>
 
-      {/* MapLibre Canvas Container */}
-      <div ref={mapContainerRef} className="w-full h-full" />
+      {/* MapLibre Canvas Container with Defocus Motion Blur */}
+      <div
+        ref={mapContainerRef}
+        className={`w-full h-full relative transition-all duration-700 ${isShowingDetails ? "has-active-details" : ""}`}
+      />
     </div>
   );
 }
