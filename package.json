@@ -1,0 +1,10 @@
+{
+  "name": "penelope-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "cd apps/web && pnpm install && pnpm build",
+    "dev": "cd apps/web && pnpm dev",
+    "start": "cd apps/web && pnpm start"
+  }
+}
