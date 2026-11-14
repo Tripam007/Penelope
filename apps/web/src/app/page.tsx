@@ -1,20 +1,24 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchMapGeoJSON } from "@/lib/api";
 import { usePenelopeStore } from "@/lib/store";
+import HeroLanding from "@/components/HeroLanding";
 import HeaderNav from "@/components/HeaderNav";
 import MapLibreFloodMap from "@/components/MapLibreFloodMap";
 import VillageRiskDrawer from "@/components/VillageRiskDrawer";
 import SensorMonitorPanel from "@/components/SensorMonitorPanel";
 import AuthorityDashboardModal from "@/components/AuthorityDashboardModal";
 import ModelTransparencyModal from "@/components/ModelTransparencyModal";
+import FirebaseAuthModal from "@/components/FirebaseAuthModal";
 import LiveAlertToast from "@/components/LiveAlertToast";
+import { ChevronDown, ArrowUp } from "lucide-react";
 
 export default function HomePage() {
   const queryClient = useQueryClient();
-  const { setActiveAlert } = usePenelopeStore();
+  const { setActiveAlert, activeNavTab, setActiveNavTab } = usePenelopeStore();
+  const mapSectionRef = useRef<HTMLDivElement>(null);
 
   const { data: geoJsonData, isLoading } = useQuery({
     queryKey: ["map-geojson"],
@@ -34,7 +38,6 @@ export default function HomePage() {
         try {
           const payload = JSON.parse(event.data);
           if (payload.type === "SENSOR_TELEMETRY") {
-            // Invalidate sensor and map queries to trigger live refresh
             queryClient.invalidateQueries({ queryKey: ["sensors"] });
             queryClient.invalidateQueries({ queryKey: ["map-geojson"] });
           } else if (payload.type === "ALERT_TRIGGERED") {
@@ -55,12 +58,8 @@ export default function HomePage() {
           console.error("Error parsing WebSocket payload:", e);
         }
       };
-
-      ws.onerror = (e) => {
-        // Graceful fallback to periodic polling if WebSocket unavailable
-      };
-    } catch (e) {
-      // Graceful degradation
+    } catch {
+      // Graceful fallback
     }
 
     return () => {
@@ -68,33 +67,76 @@ export default function HomePage() {
     };
   }, [queryClient, setActiveAlert]);
 
+  const scrollToMap = () => {
+    setActiveNavTab("map");
+    if (mapSectionRef.current) {
+      mapSectionRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  const scrollToTop = () => {
+    setActiveNavTab("home");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
-    <main className="relative w-screen h-screen flex flex-col bg-slate-950 overflow-hidden select-none">
-      {/* Top Navigation */}
-      <HeaderNav />
+    <div className="relative w-full min-h-screen bg-slate-950 text-slate-100 flex flex-col overflow-x-hidden">
+      {/* 1. FRONT LOADING HERO LANDING PAGE */}
+      <section className="relative w-full min-h-screen">
+        <HeroLanding onExploreClick={scrollToMap} />
 
-      {/* Main Fullscreen Interactive Map */}
-      <div className="relative flex-1 w-full h-[calc(100vh-4rem)]">
-        {isLoading && !geoJsonData ? (
-          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur">
-            <div className="h-10 w-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
-            <p className="mt-3 text-sm font-semibold text-slate-300">
-              Connecting to PENELOPE Hydrological Network...
-            </p>
-            <p className="text-xs text-slate-500 mt-1">Data today. Safer tomorrows.</p>
-          </div>
-        ) : null}
+        {/* Scroll To Explore Pill */}
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1 opacity-75 hover:opacity-100 transition cursor-pointer" onClick={scrollToMap}>
+          <span className="text-[10px] tracking-widest uppercase font-semibold text-slate-400">
+            Scroll to live map
+          </span>
+          <ChevronDown className="w-4 h-4 text-teal-400 animate-bounce" />
+        </div>
+      </section>
 
-        <MapLibreFloodMap geoJsonData={geoJsonData} />
+      {/* 2. LIVE INTERACTIVE MAP & TELEMETRY SECTION */}
+      <section
+        id="live-map"
+        ref={mapSectionRef}
+        className="relative w-full h-screen flex flex-col bg-slate-950 border-t border-white/10"
+      >
+        {/* Navigation Bar for Map View */}
+        <HeaderNav />
 
-        {/* Floating Components & Drawers */}
-        <VillageRiskDrawer />
-        <SensorMonitorPanel />
-        <LiveAlertToast />
-        <AuthorityDashboardModal />
-        <ModelTransparencyModal />
-      </div>
-    </main>
+        {/* Fullscreen Map Canvas */}
+        <div className="relative flex-1 w-full h-[calc(100vh-4rem)]">
+          {isLoading && !geoJsonData ? (
+            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur">
+              <div className="h-10 w-10 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
+              <p className="mt-3 text-sm font-semibold text-slate-300">
+                Connecting to PENELOPE Hydrological Network...
+              </p>
+              <p className="text-xs text-slate-500 mt-1">Data today. Safer tomorrows.</p>
+            </div>
+          ) : null}
+
+          <MapLibreFloodMap geoJsonData={geoJsonData} />
+
+          {/* Floating Telemetry & Command Drawers */}
+          <VillageRiskDrawer />
+          <SensorMonitorPanel />
+          <LiveAlertToast />
+          <AuthorityDashboardModal />
+          <ModelTransparencyModal />
+
+          {/* Back to Hero Button */}
+          <button
+            onClick={scrollToTop}
+            title="Return to Hero"
+            className="absolute bottom-5 left-5 z-20 p-2.5 rounded-full bg-slate-950/80 hover:bg-slate-900 border border-white/15 text-slate-400 hover:text-white shadow-xl backdrop-blur transition"
+          >
+            <ArrowUp className="w-4 h-4" />
+          </button>
+        </div>
+      </section>
+
+      {/* 3. FIREBASE AUTHENTICATION MODAL (Email + Phone OTP) */}
+      <FirebaseAuthModal />
+    </div>
   );
 }
-

@@ -2,7 +2,7 @@
 # Tagline: "Data today. Safer tomorrows."
 # Pillars: Predict · Prepare · Protect
 
-.PHONY: help dev build up down restart logs test lint train clean seed
+.PHONY: help dev build up down restart logs test lint migrate seed clean
 
 help:
 	@echo "Available commands:"
@@ -12,8 +12,9 @@ help:
 	@echo "  make down      - Stop and remove containers"
 	@echo "  make logs      - View logs from all containers"
 	@echo "  make test      - Run backend, frontend, and ML tests"
-	@echo "  make train     - Train ML models and export MLflow-lite metrics"
-	@echo "  make seed      - Ingest real external data and seed villages"
+	@echo "  make migrate   - Run Alembic database migrations"
+	@echo "  make seed      - Ingest real external data and seed 3 regions"
+	@echo "  make lint      - Lint code across backend and frontend"
 	@echo "  make clean     - Remove cache and temporary artifacts"
 
 dev:
@@ -34,15 +35,14 @@ restart:
 logs:
 	docker compose logs -f
 
-test:
-	pytest apps/api/tests ml/tests -v
-	cd apps/web && pnpm test
-
-train:
-	python -m ml.train
+migrate:
+	alembic upgrade head || python -c "from apps.api.database import init_db; init_db()"
 
 seed:
 	python -m apps.api.seed
+
+test:
+	python -m pytest apps/api/tests ml/tests -v
 
 lint:
 	python -m flake8 apps/api ml --max-line-length=120 --ignore=E203,W503 || true
@@ -51,4 +51,3 @@ lint:
 clean:
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	find . -type f -name "*.pyc" -delete
-

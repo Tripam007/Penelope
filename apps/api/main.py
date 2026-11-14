@@ -22,6 +22,8 @@ from apps.api.routes.sensors import router as sensors_router
 from apps.api.routes.alerts import router as alerts_router
 from apps.api.routes.ml_insights import router as ml_router
 from apps.api.routes.websockets import router as ws_router
+from apps.api.auth.router import router as auth_router
+from apps.api.middleware import RequestIdMiddleware
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("penelope.api")
@@ -57,8 +59,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(RequestIdMiddleware)
 
 # Include API routers under /api/v1
+app.include_router(auth_router, prefix=settings.API_V1_PREFIX)
 app.include_router(health_router, prefix=settings.API_V1_PREFIX)
 app.include_router(map_router, prefix=settings.API_V1_PREFIX)
 app.include_router(villages_router, prefix=settings.API_V1_PREFIX)
