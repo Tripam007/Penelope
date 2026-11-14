@@ -5,6 +5,8 @@ import maplibregl, { Map as MapLibreMap, Marker, Popup } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { usePenelopeStore } from "@/lib/store";
 import { getRiskColorClass } from "@/lib/utils";
+import { INDIA_REGIONS, IndiaRegionView } from "@/lib/mockData";
+import { fetchLiveIndiaHydrology, LiveHydrologyTelemetry } from "@/lib/liveOpenMeteo";
 import {
   Compass,
   Layers,
@@ -16,7 +18,10 @@ import {
   Activity,
   MapPin,
   Tent,
-  Navigation
+  Radio,
+  Globe,
+  Sparkles,
+  Maximize2
 } from "lucide-react";
 
 interface MapProps {
@@ -29,16 +34,23 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const markersRef = useRef<Marker[]>([]);
+  const liveClickMarkerRef = useRef<Marker | null>(null);
+
   const { setSelectedVillageId, setSelectedSensorCode, language } = usePenelopeStore();
 
   const [activeFilter, setActiveFilter] = useState<LayerFilter>("all");
+  const [selectedRegionId, setSelectedRegionId] = useState<string>("all-india");
+  const [liveInspectLoading, setLiveInspectLoading] = useState<boolean>(false);
+  const [liveTelemetryPoint, setLiveTelemetryPoint] = useState<LiveHydrologyTelemetry | null>(null);
 
+  // Initialize MapLibre with Pan-India Overview
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    const defaultLat = parseFloat(process.env.NEXT_PUBLIC_DEFAULT_LAT || "30.4856");
-    const defaultLon = parseFloat(process.env.NEXT_PUBLIC_DEFAULT_LON || "79.5667");
-    const defaultZoom = parseFloat(process.env.NEXT_PUBLIC_DEFAULT_ZOOM || "9.5");
+    // Pan-India default center
+    const defaultLng = 78.9629;
+    const defaultLat = 22.5937;
+    const defaultZoom = 4.8;
     const mapStyle =
       process.env.NEXT_PUBLIC_MAP_STYLE ||
       "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
@@ -46,10 +58,10 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
     const map = new maplibregl.Map({
       container: mapContainerRef.current,
       style: mapStyle,
-      center: [defaultLon, defaultLat],
+      center: [defaultLng, defaultLat],
       zoom: defaultZoom,
-      pitch: 48, // 3D mountain relief angle
-      bearing: -12,
+      pitch: 28,
+      bearing: 0,
       attributionControl: false,
     });
 
@@ -62,22 +74,159 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
       }
     });
 
+    // Real-Time Live Click Inspector anywhere in India
+    map.on("click", async (e) => {
+      // If clicking directly on a marker, ignore canvas click
+      const originalTarget = (e.originalEvent?.target as HTMLElement) || null;
+      if (originalTarget && originalTarget.closest(".maplibregl-marker")) {
+        return;
+      }
+
+      const { lng, lat } = e.lngLat;
+      // Restrict within Indian subcontinent coordinates approx [68, 6] to [97, 36]
+      if (lng < 67 || lng > 98 || lat < 6 || lat > 38) return;
+
+      setLiveInspectLoading(true);
+
+      if (liveClickMarkerRef.current) {
+        liveClickMarkerRef.current.remove();
+        liveClickMarkerRef.current = null;
+      }
+
+      try {
+        const liveData = await fetchLiveIndiaHydrology(lat, lng);
+        setLiveTelemetryPoint(liveData);
+
+        const el = document.createElement("div");
+        el.className = "cursor-pointer flex flex-col items-center";
+        el.innerHTML = `
+          <div class="relative flex items-center justify-center">
+            <span class="animate-ping absolute inline-flex h-8 w-8 rounded-full bg-teal-400 opacity-75"></span>
+            <div class="h-6 w-6 rounded-full bg-teal-500 border-2 border-white shadow-[0_0_15px_#2dd4bf] flex items-center justify-center text-[10px]">
+              📡
+            </div>
+          </div>
+        `;
+
+        const riskColor = getRiskColorClass(liveData.risk_level);
+
+        const popup = new maplibregl.Popup({ offset: 15, maxWidth: "340px" }).setHTML(`
+          <div class="p-3 text-slate-100 bg-slate-950 rounded-2xl border border-teal-500/50 font-sans shadow-2xl space-y-2">
+            <div class="flex items-start justify-between border-b border-slate-800 pb-2">
+              <div>
+                <div class="flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-teal-400 animate-pulse"></span>
+                  <h4 class="font-bold text-xs text-teal-300">Live Real-Time Query</h4>
+                </div>
+                <div class="text-[10px] text-slate-400 font-mono mt-0.5">
+                  ${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="text-[9px] text-slate-400 block">GROUND ELEVATION</span>
+                <span class="text-xs font-black text-amber-300 font-mono">${liveData.elevation_m}m ASL</span>
+              </div>
+            </div>
+
+            <div class="p-2 rounded-xl bg-slate-900 border border-slate-800/80">
+              <div class="flex items-center justify-between text-[10px] text-sky-400 font-bold mb-1">
+                <span>🌧️ Live Open-Meteo Rain</span>
+                <span class="text-amber-400">Peak: ${liveData.peak_rain_rate_mmh} mm/h</span>
+              </div>
+              <div class="grid grid-cols-4 gap-1 text-center font-mono">
+                <div class="p-1 rounded bg-slate-950 border border-slate-800">
+                  <span class="text-[8px] text-slate-400 block">1H</span>
+                  <span class="text-[10px] font-bold text-sky-300">${liveData.rain_1h_mm}m</span>
+                </div>
+                <div class="p-1 rounded bg-slate-950 border border-slate-800">
+                  <span class="text-[8px] text-slate-400 block">3H</span>
+                  <span class="text-[10px] font-bold text-sky-300">${liveData.rain_3h_mm}m</span>
+                </div>
+                <div class="p-1 rounded bg-slate-950 border border-slate-800">
+                  <span class="text-[8px] text-slate-400 block">6H</span>
+                  <span class="text-[10px] font-bold text-sky-300">${liveData.rain_6h_mm}m</span>
+                </div>
+                <div class="p-1 rounded bg-slate-950 border border-slate-800">
+                  <span class="text-[8px] text-slate-400 block">24H</span>
+                  <span class="text-[10px] font-bold text-amber-400">${liveData.rain_24h_mm}m</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-1.5 text-[10px]">
+              <div class="p-1.5 rounded-lg bg-slate-900 border border-slate-800">
+                <span class="text-slate-400 block text-[9px]">GLOFAS DISCHARGE</span>
+                <span class="font-bold text-white font-mono">${liveData.river_discharge_m3s} m³/s</span>
+                <span class="text-[8px] text-slate-500 block">Anomaly: ${liveData.river_anomaly_m3s > 0 ? "+" : ""}${liveData.river_anomaly_m3s} m³/s</span>
+              </div>
+              <div class="p-1.5 rounded-lg bg-slate-900 border border-slate-800">
+                <span class="text-slate-400 block text-[9px]">SOIL SATURATION</span>
+                <span class="font-bold text-purple-300 font-mono">${Math.round(liveData.soil_ratios.saturation_ratio * 100)}%</span>
+                <span class="text-[8px] text-slate-500 block">API: ${liveData.antecedent_index}</span>
+              </div>
+            </div>
+
+            <div class="p-1.5 rounded-lg border flex items-center justify-between" style="border-color: ${riskColor.hex}50; background: ${riskColor.hex}15">
+              <span class="text-[10px] font-bold" style="color: ${riskColor.hex}">
+                ${liveData.risk_level} FLASH-FLOOD RISK
+              </span>
+              <span class="text-xs font-black font-mono" style="color: ${riskColor.hex}">
+                ${Math.round(liveData.risk_score * 100)}%
+              </span>
+            </div>
+
+            <div class="text-[9px] text-slate-500 flex justify-between border-t border-slate-800/80 pt-1">
+              <span>Source: Open-Meteo & GloFAS</span>
+              <span>Updated: ${liveData.fetched_at} IST</span>
+            </div>
+          </div>
+        `);
+
+        const newMarker = new maplibregl.Marker({ element: el })
+          .setLngLat([lng, lat])
+          .setPopup(popup)
+          .addTo(map);
+
+        liveClickMarkerRef.current = newMarker;
+        popup.addTo(map);
+      } catch (err) {
+        console.error("Failed to query live hydrology:", err);
+      } finally {
+        setLiveInspectLoading(false);
+      }
+    });
+
     return () => {
       markersRef.current.forEach((m) => m.remove());
       markersRef.current = [];
+      if (liveClickMarkerRef.current) liveClickMarkerRef.current.remove();
       map.remove();
     };
   }, []);
 
-  // Re-render markers when data, filter, or language changes
+  // Re-render markers when data or filter changes
   useEffect(() => {
     if (mapRef.current && geoJsonData) {
       renderMapFeatures(mapRef.current, geoJsonData);
     }
   }, [geoJsonData, activeFilter, language]);
 
+  // Handle India Region Selection and Smooth FlyTo
+  const handleSelectRegion = (region: IndiaRegionView) => {
+    setSelectedRegionId(region.id);
+    if (!mapRef.current) return;
+
+    mapRef.current.flyTo({
+      center: region.center,
+      zoom: region.zoom,
+      pitch: region.pitch,
+      speed: 1.4,
+      curve: 1.2,
+      essential: true,
+    });
+  };
+
   const renderMapFeatures = (map: MapLibreMap, data: any) => {
-    // Clear old markers
     markersRef.current.forEach((m) => m.remove());
     markersRef.current = [];
 
@@ -101,38 +250,37 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
       if (activeFilter === "shelters" && layerType !== "shelter") return;
       if (activeFilter === "sensors" && layerType !== "sensor") return;
 
-      const riskColor = getRiskColorClass(p.risk_level || (p.risk_score ? (p.risk_score >= 0.75 ? "Very High" : p.risk_score >= 0.5 ? "High" : "Moderate") : "Low"));
+      const riskColor = getRiskColorClass(
+        p.risk_level || (p.risk_score ? (p.risk_score >= 0.75 ? "Very High" : p.risk_score >= 0.5 ? "High" : "Moderate") : "Low")
+      );
       const displayName = language === "hi" && p.hindi_name ? p.hindi_name : p.name;
-      const groundHeight = p.ground_height_m || p.elevation_m || 1500;
-      const rain1h = p.rain_1h_mm ?? 12.0;
-      const rain3h = p.rain_3h_mm ?? 34.0;
-      const rain6h = p.rain_6h_mm ?? 58.0;
-      const rain24h = p.rain_24h_mm ?? 88.0;
+      const groundHeight = p.ground_height_m || p.elevation_m || 500;
+      const stateName = p.state || "India";
+      const rain1h = p.rain_1h_mm ?? 14.0;
+      const rain3h = p.rain_3h_mm ?? 38.0;
+      const rain6h = p.rain_6h_mm ?? 66.0;
+      const rain24h = p.rain_24h_mm ?? 98.0;
       const peakRate = p.peak_rain_rate_mmh ?? 22.0;
-      const antecedentIdx = p.antecedent_index ?? 28.5;
-      const soilSat = p.soil_ratios?.saturation_ratio != null ? Math.round(p.soil_ratios.saturation_ratio * 100) : 78;
-      const dischargeM3s = p.river_discharge_m3s ?? p.discharge_m3s ?? 320.0;
-      const anomalyM3s = p.river_anomaly_m3s ?? (dischargeM3s - 180.0);
+      const antecedentIdx = p.antecedent_index ?? 32.0;
+      const soilSat = p.soil_ratios?.saturation_ratio != null ? Math.round(p.soil_ratios.saturation_ratio * 100) : 82;
+      const dischargeM3s = p.river_discharge_m3s ?? p.discharge_m3s ?? 580.0;
+      const anomalyM3s = p.river_anomaly_m3s ?? (dischargeM3s - 220.0);
 
-      // -------------------------------------------------------------
-      // 1. SENSOR / RIVER GAUGE MARKER
-      // -------------------------------------------------------------
+      // SENSORS
       if (layerType === "sensor") {
-        const waterLevel = p.water_level_m || 2.4;
+        const waterLevel = p.water_level_m || 4.5;
         const dangerLevel = p.danger_level_m || 5.0;
-        const isCritical = waterLevel >= (dangerLevel * 0.9);
 
         const el = document.createElement("div");
         el.className = "cursor-pointer group flex flex-col items-center";
         el.innerHTML = `
           <div class="relative flex items-center justify-center">
-            ${isCritical ? `<span class="animate-ping absolute inline-flex h-8 w-8 rounded-full bg-cyan-400 opacity-75"></span>` : ""}
             <div class="h-6 w-6 rounded-md bg-slate-950 border-2 border-cyan-400 shadow-[0_0_12px_#38bdf8] flex items-center justify-center transition-transform group-hover:scale-125">
               <span class="text-[11px]">📡</span>
             </div>
           </div>
           <div class="mt-1 px-1.5 py-0.5 rounded bg-slate-950/90 border border-cyan-500/50 text-[9px] font-mono text-cyan-300 shadow whitespace-nowrap">
-            ${waterLevel}m · ${dischargeM3s}m³/s
+            ${p.river_name || "River"} · ${dischargeM3s}m³/s
           </div>
         `;
 
@@ -142,16 +290,16 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
               <span class="text-sm">📡</span>
               <div>
                 <h4 class="font-bold text-xs text-cyan-300">${p.name}</h4>
-                <p class="text-[10px] text-slate-400">River: ${p.river_name || "Mountain River"}</p>
+                <p class="text-[10px] text-slate-400">${stateName} · River: ${p.river_name}</p>
               </div>
             </div>
-            <div class="grid grid-cols-2 gap-2 text-[11px] mb-2">
+            <div class="grid grid-cols-2 gap-2 text-[11px] mb-2 font-mono">
               <div class="p-1.5 rounded bg-slate-900 border border-slate-800">
-                <span class="text-slate-400 block text-[9px]">WATER STAGE</span>
+                <span class="text-slate-400 block text-[9px] font-sans">WATER STAGE</span>
                 <span class="font-bold text-cyan-400">${waterLevel} m</span>
               </div>
               <div class="p-1.5 rounded bg-slate-900 border border-slate-800">
-                <span class="text-slate-400 block text-[9px]">DISCHARGE</span>
+                <span class="text-slate-400 block text-[9px] font-sans">DISCHARGE</span>
                 <span class="font-bold text-amber-300">${dischargeM3s} m³/s</span>
               </div>
             </div>
@@ -175,9 +323,7 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
         return;
       }
 
-      // -------------------------------------------------------------
-      // 2. SHELTER MARKER
-      // -------------------------------------------------------------
+      // SHELTERS
       if (layerType === "shelter") {
         const el = document.createElement("div");
         el.className = "cursor-pointer group flex flex-col items-center";
@@ -198,13 +344,12 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
               <span class="text-sm">⛺</span>
               <div>
                 <h4 class="font-bold text-xs text-emerald-300">${displayName}</h4>
-                <span class="text-[9px] bg-emerald-500/20 text-emerald-400 px-1 rounded border border-emerald-500/30">Safe Evacuation Shelter</span>
+                <span class="text-[9px] bg-emerald-500/20 text-emerald-400 px-1 rounded border border-emerald-500/30">${stateName} Safe Evacuation Camp</span>
               </div>
             </div>
             <div class="space-y-1.5 text-[11px] text-slate-300 mb-2">
               <div class="flex justify-between"><span>Capacity:</span> <b class="text-white">${p.capacity || 400} Persons</b></div>
               <div class="flex justify-between"><span>Safe Ground Elevation:</span> <b class="text-emerald-400">${groundHeight} meters</b></div>
-              <div class="flex justify-between"><span>River Distance:</span> <b class="text-white">${p.river_distance_m || 450} meters</b></div>
               <div class="flex justify-between"><span>Relief Contact:</span> <b class="text-white">${p.contact_phone || "+91-1372-252101"}</b></div>
             </div>
           </div>
@@ -219,9 +364,7 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
         return;
       }
 
-      // -------------------------------------------------------------
-      // 3. LANDMARK / TOURIST / TREK / BRIDGE / VILLAGE / TOWN MARKER
-      // -------------------------------------------------------------
+      // TOWNS, VILLAGES, LANDMARKS, TREKS, BRIDGES
       let icon = "📍";
       let badgeLabel = "Village";
       let borderStyle = "rounded-full";
@@ -236,7 +379,7 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
         borderStyle = "rounded-full";
       } else if (layerType === "trek") {
         icon = "🥾";
-        badgeLabel = "Trek Trail";
+        badgeLabel = "Trek";
         borderStyle = "rounded-md";
       } else if (layerType === "bridge") {
         icon = "🌉";
@@ -251,7 +394,7 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
       el.innerHTML = `
         <div class="relative flex items-center justify-center">
           ${isHighOrVeryHigh ? `<span class="animate-ping absolute inline-flex h-8 w-8 rounded-full bg-red-400 opacity-75"></span>` : ""}
-          <div class="h-6 w-6 ${borderStyle} border-2 border-slate-900 shadow-xl flex items-center justify-center transition-transform group-hover:scale-125" style="background-color: ${riskColor.hex}; box-shadow: 0 0 12px ${riskColor.hex}">
+          <div class="h-6 w-6 ${borderStyle} border-2 border-slate-900 shadow-xl flex items-center justify-center transition-transform group-hover:scale-125" style="background-color: ${riskColor.hex}; box-shadow: 0 0 14px ${riskColor.hex}">
             <span class="text-[10px]">${icon}</span>
           </div>
         </div>
@@ -263,10 +406,8 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
         </div>
       `;
 
-      // Rich Full Telemetry Popup (Open-Meteo rain, GloFAS flood, ground height, soil ratios)
       const popup = new maplibregl.Popup({ offset: 15, maxWidth: "340px" }).setHTML(`
         <div class="p-3 text-slate-100 bg-slate-950 rounded-2xl border border-slate-800 font-sans shadow-2xl space-y-2">
-          {/* Header */}
           <div class="flex items-start justify-between border-b border-slate-800 pb-2">
             <div>
               <div class="flex items-center gap-1.5">
@@ -275,7 +416,7 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
               </div>
               <div class="flex items-center gap-1.5 mt-0.5">
                 <span class="text-[9px] px-1.5 py-0.2 rounded font-bold uppercase tracking-wider bg-slate-800 text-slate-300">
-                  ${badgeLabel}
+                  ${stateName} · ${badgeLabel}
                 </span>
                 <span class="text-[9px] px-1.5 py-0.2 rounded font-bold uppercase" style="background-color: ${riskColor.hex}22; color: ${riskColor.hex}">
                   ${p.risk_level || "MODERATE"} RISK (${riskPercent}%)
@@ -283,71 +424,67 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
               </div>
             </div>
             <div class="text-right">
-              <span class="text-[9px] text-slate-400 block">ELEVATION</span>
+              <span class="text-[9px] text-slate-400 block font-sans">ELEVATION</span>
               <span class="text-xs font-black text-amber-300 font-mono">${groundHeight}m</span>
             </div>
           </div>
 
-          {/* Open-Meteo Rain Forecast Grid (1h, 3h, 6h, 24h, Peak) */}
           <div class="p-2 rounded-xl bg-slate-900/90 border border-slate-800/80">
             <div class="flex items-center justify-between text-[10px] text-sky-400 font-bold mb-1">
-              <span class="flex items-center gap-1">🌧️ Open-Meteo Rain Forecast</span>
+              <span>🌧️ Open-Meteo Rain Forecast</span>
               <span class="text-amber-400">Peak: ${peakRate} mm/h</span>
             </div>
             <div class="grid grid-cols-4 gap-1 text-center font-mono">
               <div class="p-1 rounded bg-slate-950 border border-slate-800/60">
-                <span class="text-[8px] text-slate-400 block font-sans">1-HOUR</span>
-                <span class="text-[11px] font-bold text-sky-300">${rain1h}mm</span>
+                <span class="text-[8px] text-slate-400 block font-sans">1H</span>
+                <span class="text-[10px] font-bold text-sky-300">${rain1h}mm</span>
               </div>
               <div class="p-1 rounded bg-slate-950 border border-slate-800/60">
-                <span class="text-[8px] text-slate-400 block font-sans">3-HOUR</span>
-                <span class="text-[11px] font-bold text-sky-300">${rain3h}mm</span>
+                <span class="text-[8px] text-slate-400 block font-sans">3H</span>
+                <span class="text-[10px] font-bold text-sky-300">${rain3h}mm</span>
               </div>
               <div class="p-1 rounded bg-slate-950 border border-slate-800/60">
-                <span class="text-[8px] text-slate-400 block font-sans">6-HOUR</span>
-                <span class="text-[11px] font-bold text-sky-300">${rain6h}mm</span>
+                <span class="text-[8px] text-slate-400 block font-sans">6H</span>
+                <span class="text-[10px] font-bold text-sky-300">${rain6h}mm</span>
               </div>
               <div class="p-1 rounded bg-slate-950 border border-slate-800/60">
-                <span class="text-[8px] text-slate-400 block font-sans">24-HOUR</span>
-                <span class="text-[11px] font-bold text-amber-400">${rain24h}mm</span>
+                <span class="text-[8px] text-slate-400 block font-sans">24H</span>
+                <span class="text-[10px] font-bold text-amber-400">${rain24h}mm</span>
               </div>
             </div>
           </div>
 
-          {/* Antecedent Index & Soil Saturation */}
           <div class="grid grid-cols-2 gap-1.5 text-[10px]">
-            <div class="p-2 rounded-xl bg-slate-900 border border-slate-800">
-              <span class="text-slate-400 block text-[9px]">ANTECEDENT INDEX (API)</span>
+            <div class="p-1.5 rounded-xl bg-slate-900 border border-slate-800">
+              <span class="text-slate-400 block text-[9px]">ANTECEDENT INDEX</span>
               <span class="text-xs font-bold text-teal-300 font-mono">${antecedentIdx}</span>
-              <span class="text-[9px] text-slate-500 block">7-day rainfall memory</span>
+              <span class="text-[8px] text-slate-500 block">7-day memory</span>
             </div>
-            <div class="p-2 rounded-xl bg-slate-900 border border-slate-800">
+            <div class="p-1.5 rounded-xl bg-slate-900 border border-slate-800">
               <span class="text-slate-400 block text-[9px]">SOIL SATURATION</span>
               <span class="text-xs font-bold text-purple-300 font-mono">${soilSat}%</span>
-              <span class="text-[9px] text-slate-500 block">0-28cm root-zone ratio</span>
+              <span class="text-[8px] text-slate-500 block">Root-zone ratio</span>
             </div>
           </div>
 
-          {/* GloFAS River Discharge & Anomaly */}
           <div class="p-2 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between text-[11px]">
             <div>
-              <span class="text-[9px] text-slate-400 block">GLOFAS RIVER DISCHARGE</span>
+              <span class="text-[9px] text-slate-400 block font-sans">GLOFAS DISCHARGE</span>
               <span class="font-bold text-cyan-300 font-mono">${dischargeM3s} m³/s</span>
             </div>
             <div class="text-right">
-              <span class="text-[9px] text-slate-400 block">RIVER ANOMALY</span>
+              <span class="text-[9px] text-slate-400 block font-sans">SURGE ANOMALY</span>
               <span class="font-bold ${anomalyM3s > 0 ? "text-red-400" : "text-emerald-400"} font-mono">
                 ${anomalyM3s > 0 ? `+${anomalyM3s}` : anomalyM3s} m³/s
               </span>
             </div>
           </div>
 
-          {/* Inspect Button */}
           <button
             id="btn-inspect-${p.id}"
             class="w-full mt-1 py-1.5 px-3 rounded-lg bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/40 text-teal-200 text-xs font-bold transition flex items-center justify-center gap-1.5"
           >
-            <span>Open Catchment Diagnostic Profile</span>
+            <span>Open Diagnostic Profile</span>
             <span>→</span>
           </button>
         </div>
@@ -373,75 +510,69 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
 
       markersRef.current.push(marker);
     });
-
-    // Render evacuation routes
-    const lineFeatures = data.features.filter(
-      (f: any) =>
-        f.properties?.layer_type === "evacuation_route" ||
-        f.properties?.category === "evacuation_route"
-    );
-
-    if (map.getSource("evacuation-routes")) {
-      (map.getSource("evacuation-routes") as maplibregl.GeoJSONSource).setData({
-        type: "FeatureCollection",
-        features: lineFeatures,
-      });
-    } else if (lineFeatures.length > 0) {
-      map.addSource("evacuation-routes", {
-        type: "geojson",
-        data: {
-          type: "FeatureCollection",
-          features: lineFeatures,
-        },
-      });
-
-      map.addLayer({
-        id: "evacuation-routes-line",
-        type: "line",
-        source: "evacuation-routes",
-        paint: {
-          "line-color": "#34d399",
-          "line-width": 3,
-          "line-dasharray": [2, 2],
-        },
-      });
-    }
   };
 
   return (
     <div className="relative w-full h-full">
-      {/* Top Floating Landmark Filter Bar */}
-      <div className="absolute top-4 left-4 z-10 flex flex-wrap items-center gap-1.5 p-1.5 rounded-2xl bg-slate-950/85 backdrop-blur-2xl border border-white/10 shadow-2xl max-w-[calc(100vw-2rem)] overflow-x-auto">
+      {/* 1. Top Real-Time India Region Quick Jump Bar */}
+      <div className="absolute top-3 left-4 z-10 flex items-center gap-1.5 p-1 rounded-2xl bg-slate-950/90 backdrop-blur-2xl border border-white/15 shadow-2xl max-w-[calc(100vw-3rem)] overflow-x-auto scrollbar-none">
+        <span className="text-[10px] font-bold text-teal-400 uppercase tracking-wider px-2 flex items-center gap-1 shrink-0">
+          <Globe className="w-3.5 h-3.5" />
+          <span>India Regions:</span>
+        </span>
+
+        {INDIA_REGIONS.map((region) => {
+          const isSelected = selectedRegionId === region.id;
+          return (
+            <button
+              key={region.id}
+              onClick={() => handleSelectRegion(region)}
+              className={`px-2.5 py-1 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 shrink-0 ${
+                isSelected
+                  ? "bg-teal-500 text-slate-950 font-bold shadow-md shadow-teal-500/30"
+                  : "text-slate-300 hover:text-white hover:bg-slate-900/80"
+              }`}
+            >
+              <span>{region.id === "all-india" ? "🇮🇳" : "📍"}</span>
+              <span>{region.name.split("(")[0].trim()}</span>
+              {region.status === "CRITICAL" && (
+                <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-ping ml-0.5" />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 2. Secondary Filter Bar (All Landmarks, High Risk, Villages, Tourist, Shelters) */}
+      <div className="absolute top-14 left-4 z-10 flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-slate-950/80 backdrop-blur-xl border border-white/10 shadow-xl max-w-[calc(100vw-3rem)] overflow-x-auto">
         <button
           onClick={() => setActiveFilter("all")}
-          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+          className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 ${
             activeFilter === "all"
-              ? "bg-teal-500 text-slate-950 shadow-md"
-              : "text-slate-300 hover:text-white hover:bg-slate-900/60"
+              ? "bg-white/20 text-white border border-white/30"
+              : "text-slate-400 hover:text-white"
           }`}
         >
-          <Layers className="w-3.5 h-3.5" />
+          <Layers className="w-3 h-3" />
           <span>All Landmarks ({geoJsonData?.features?.length || 0})</span>
         </button>
 
         <button
           onClick={() => setActiveFilter("high_risk")}
-          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+          className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 ${
             activeFilter === "high_risk"
-              ? "bg-red-500 text-white shadow-md shadow-red-500/30"
-              : "text-slate-300 hover:text-white hover:bg-slate-900/60"
+              ? "bg-red-500 text-white shadow-sm"
+              : "text-red-400 hover:bg-red-500/10"
           }`}
         >
-          <AlertTriangle className="w-3.5 h-3.5 text-red-400" />
+          <AlertTriangle className="w-3 h-3 text-red-400" />
           <span>High Risk Only</span>
         </button>
 
         <button
           onClick={() => setActiveFilter("villages")}
-          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
-            activeFilter === "villages"
-              ? "bg-amber-500 text-slate-950 shadow-md"
-              : "text-slate-300 hover:text-white hover:bg-slate-900/60"
+          className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 ${
+            activeFilter === "villages" ? "bg-amber-500 text-slate-950" : "text-slate-400 hover:text-white"
           }`}
         >
           <span>🏛️</span>
@@ -450,22 +581,18 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
 
         <button
           onClick={() => setActiveFilter("tourist")}
-          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
-            activeFilter === "tourist"
-              ? "bg-purple-500 text-white shadow-md"
-              : "text-slate-300 hover:text-white hover:bg-slate-900/60"
+          className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 ${
+            activeFilter === "tourist" ? "bg-purple-500 text-white" : "text-slate-400 hover:text-white"
           }`}
         >
           <span>🛕</span>
-          <span>Tourist & Shrines</span>
+          <span>Tourist & Heritage</span>
         </button>
 
         <button
           onClick={() => setActiveFilter("treks_bridges")}
-          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
-            activeFilter === "treks_bridges"
-              ? "bg-sky-500 text-slate-950 shadow-md"
-              : "text-slate-300 hover:text-white hover:bg-slate-900/60"
+          className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 ${
+            activeFilter === "treks_bridges" ? "bg-sky-500 text-slate-950" : "text-slate-400 hover:text-white"
           }`}
         >
           <span>🥾</span>
@@ -474,27 +601,40 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
 
         <button
           onClick={() => setActiveFilter("shelters")}
-          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
-            activeFilter === "shelters"
-              ? "bg-emerald-500 text-slate-950 shadow-md"
-              : "text-slate-300 hover:text-white hover:bg-slate-900/60"
+          className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 ${
+            activeFilter === "shelters" ? "bg-emerald-500 text-slate-950" : "text-slate-400 hover:text-white"
           }`}
         >
-          <Tent className="w-3.5 h-3.5 text-emerald-400" />
+          <Tent className="w-3 h-3 text-emerald-400" />
           <span>Safe Shelters</span>
         </button>
 
         <button
           onClick={() => setActiveFilter("sensors")}
-          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
-            activeFilter === "sensors"
-              ? "bg-cyan-500 text-slate-950 shadow-md"
-              : "text-slate-300 hover:text-white hover:bg-slate-900/60"
+          className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 ${
+            activeFilter === "sensors" ? "bg-cyan-500 text-slate-950" : "text-slate-400 hover:text-white"
           }`}
         >
-          <Waves className="w-3.5 h-3.5 text-cyan-400" />
+          <Waves className="w-3 h-3 text-cyan-400" />
           <span>River Gauges</span>
         </button>
+      </div>
+
+      {/* 3. Bottom Live Status Indicator & Click Instruction */}
+      <div className="absolute bottom-4 left-4 z-10 flex items-center gap-3">
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950/85 backdrop-blur-xl border border-teal-500/30 text-[11px] font-medium text-slate-200 shadow-xl">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" />
+          <span className="font-bold text-teal-300">REAL-TIME INDIA NETWORK</span>
+          <span className="text-slate-500">|</span>
+          <span className="text-slate-400 hidden sm:inline">Click anywhere on India to query real-time Open-Meteo & GloFAS telemetry</span>
+        </div>
+
+        {liveInspectLoading && (
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-teal-500/20 backdrop-blur border border-teal-400 text-xs font-bold text-teal-300 animate-pulse">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Fetching Live Satellite Telemetry...</span>
+          </div>
+        )}
       </div>
 
       {/* MapLibre Canvas Container */}
