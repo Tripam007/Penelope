@@ -1,42 +1,42 @@
 {
   "model_name": "Random Forest Baseline",
-  "timestamp": "2026-11-13T16:52:20.102460Z",
+  "timestamp": "2026-11-14T06:01:58.131601Z",
   "dataset_size": 1000,
   "metrics": {
-    "accuracy": 0.997,
-    "roc_auc": 0.9999,
-    "pr_auc": 0.9982,
-    "f1_score": 0.973,
-    "precision": 0.9818,
-    "recall": 0.9643,
-    "brier_score": 0.0018,
+    "accuracy": 0.952,
+    "roc_auc": 0.7773,
+    "pr_auc": 0.5993,
+    "f1_score": 0.6962,
+    "precision": 0.9322,
+    "recall": 0.5556,
+    "brier_score": 0.046,
     "confusion_matrix": [
       [
-        943,
-        1
+        897,
+        4
       ],
       [
-        2,
-        54
+        44,
+        55
       ]
     ]
   },
   "feature_importances": {
-    "rain_1h_mm": 0.1619,
-    "rain_3h_mm": 0.0607,
-    "rain_6h_mm": 0.0473,
-    "rain_24h_mm": 0.0187,
-    "rain_peak_rate_mmh": 0.1627,
-    "antecedent_precip_index_7d": 0.0673,
-    "soil_moisture_surface_ratio": 0.001,
-    "soil_moisture_deep_ratio": 0.0025,
-    "elevation_m": 0.0002,
-    "slope_degrees": 0.0002,
-    "river_discharge_m3s": 0.1079,
-    "discharge_percentile_anomaly": 0.1322,
-    "sensor_level_m": 0.0106,
-    "sensor_rate_of_rise_mh": 0.1777,
-    "sensor_danger_ratio": 0.0491
+    "rain_1h_mm": 0.131,
+    "rain_3h_mm": 0.0828,
+    "rain_6h_mm": 0.0743,
+    "rain_24h_mm": 0.0634,
+    "rain_peak_rate_mmh": 0.1826,
+    "antecedent_precip_index_7d": 0.0755,
+    "soil_moisture_surface_ratio": 0.0092,
+    "soil_moisture_deep_ratio": 0.0274,
+    "elevation_m": 0.0112,
+    "slope_degrees": 0.0125,
+    "river_discharge_m3s": 0.1116,
+    "discharge_percentile_anomaly": 0.125,
+    "sensor_level_m": 0.0055,
+    "sensor_rate_of_rise_mh": 0.0311,
+    "sensor_danger_ratio": 0.057
   },
   "disclaimer": "ADVISORY ONLY. Model metrics derived against hydro-meteorological proxy thresholds. Follow official IMD/CWC/NDMA warnings."
 }

@@ -1,23 +1,23 @@
 {
   "model_name": "Hydrology Sequence LSTM",
-  "timestamp": "2026-11-13T16:52:20.540899Z",
+  "timestamp": "2026-11-14T06:01:59.217365Z",
   "dataset_size": 1000,
   "metrics": {
-    "accuracy": 0.096,
-    "roc_auc": 0.7449,
-    "pr_auc": 0.0993,
-    "f1_score": 0.1102,
-    "precision": 0.0583,
-    "recall": 1.0,
-    "brier_score": 0.2947,
+    "accuracy": 0.132,
+    "roc_auc": 0.6251,
+    "pr_auc": 0.1256,
+    "f1_score": 0.1842,
+    "precision": 0.1016,
+    "recall": 0.9899,
+    "brier_score": 0.2925,
     "confusion_matrix": [
       [
-        40,
-        904
+        34,
+        867
       ],
       [
-        0,
-        56
+        1,
+        98
       ]
     ]
   },

@@ -1,0 +1,5 @@
+threshold,dharali_2025_flagged,dharali_2025_lead_time,kedarnath_2013_flagged,kedarnath_2013_lead_time,kerala_2018_flagged,kerala_2018_lead_time,wayanad_2024_flagged,wayanad_2024_lead_time,dharali_2025_quiet_episodes_per_day,kedarnath_2013_quiet_episodes_per_day,kerala_2018_quiet_episodes_per_day,wayanad_2024_quiet_episodes_per_day
+0.55,no,never reached High,yes,1 hour,yes,0 hours,yes,not sustained to event,0.0,0.0,0.8,1.2
+0.65,no,never reached High,yes,not sustained to event,yes,0 hours,yes,not sustained to event,0.0,0.0,0.6,0.2
+0.75,no,never reached High,no,never reached High,yes,0 hours,yes,not sustained to event,0.0,0.0,0.2,0.0
+0.85,no,never reached High,no,never reached High,yes,0 hours,no,never reached High,0.0,0.0,0.0,0.0

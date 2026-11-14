@@ -6,7 +6,7 @@ calibrated for Himalayan and Western Ghats basins using pure NumPy.
 
 from typing import Tuple, List, Dict
 import numpy as np
-from ml.features import FEATURE_NAMES
+from ml.features import FEATURE_NAMES, extract_features_vector
 from ml.proxy_labels import compute_proxy_flash_flood_label
 
 
@@ -21,18 +21,33 @@ FOCUS_BASINS = [
 
 def generate_hydrometeorological_dataset(
     n_samples: int = 4000,
-    random_state: int = 42
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    random_state: int = 42,
+    label_noise: float = 0.05,
+    missing_sensor_rate: float = 0.10,
+    return_basin_ids: bool = False,
+) -> Tuple[np.ndarray, ...]:
     """
     Generates realistic multivariate feature matrix X and proxy labels y using pure NumPy.
+
+    Parameters:
+      n_samples: Number of synthetic basin event samples to generate.
+      random_state: Fixed random seed for deterministic reproducibility.
+      label_noise: Probability of flipping binary flood label (~0.05 = 5%).
+      missing_sensor_rate: Probability of blanking each sensor_* feature (~0.10 = 10%),
+                           which is passed through the existing fallback logic in features.py.
+      return_basin_ids: If True, returns basin indices (0-4) aligned with FOCUS_BASINS.
+
     Returns:
       X: np.ndarray shape (n_samples, len(FEATURE_NAMES))
       y: np.ndarray shape (n_samples,)
       lstm_sequences: np.ndarray shape (n_samples, 24, 4)
+      (optional) basin_ids: np.ndarray shape (n_samples,) if return_basin_ids is True
     """
     np.random.seed(random_state)
+    rng = np.random.RandomState(random_state)
     labels: List[int] = []
     X = np.zeros((n_samples, len(FEATURE_NAMES)), dtype=np.float32)
+    sensor_cols = [name for name in FEATURE_NAMES if name.startswith("sensor_")]
 
     # Sequence array for LSTM (n_samples, 24 timesteps, 4 channels: rain, soil_moisture, river_level, discharge)
     lstm_sequences = np.zeros((n_samples, 24, 4), dtype=np.float32)
@@ -110,8 +125,17 @@ def generate_hydrometeorological_dataset(
         y_label = compute_proxy_flash_flood_label(row)
         labels.append(y_label)
 
-        for col_idx, col_name in enumerate(FEATURE_NAMES):
-            X[i, col_idx] = float(row[col_name])
+        # Blank about missing_sensor_rate of sensor_* features, passing through fallback logic in features.py
+        telemetry_dict = dict(row)
+        telemetry_dict["sensor_danger_mark_m"] = danger_mark
+        if missing_sensor_rate > 0.0:
+            for s_col in sensor_cols:
+                if rng.rand() < missing_sensor_rate:
+                    telemetry_dict.pop(s_col, None)
+
+        feat_vector = extract_features_vector(telemetry_dict)
+        for col_idx, col_val in enumerate(feat_vector):
+            X[i, col_idx] = float(col_val)
 
         # Synthesize temporal sequence (24 steps hourly)
         t_steps = 24
@@ -131,4 +155,12 @@ def generate_hydrometeorological_dataset(
             lstm_sequences[i, t, 3] = float(discharge_trajectory[t])
 
     y = np.array(labels, dtype=np.int32)
+    if label_noise > 0.0:
+        flip_mask = rng.rand(n_samples) < label_noise
+        y[flip_mask] = 1 - y[flip_mask]
+
+    if return_basin_ids:
+        basin_ids = np.array([i % len(FOCUS_BASINS) for i in range(n_samples)], dtype=np.int32)
+        return X, y, lstm_sequences, basin_ids
+
     return X, y, lstm_sequences

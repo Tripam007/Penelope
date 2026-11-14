@@ -75,6 +75,20 @@ def test_proxy_labels():
     assert compute_proxy_flash_flood_label(flood_conditions) == 1
 
 
+def test_dataset_noise_and_missing_sensors():
+    X_clean, y_clean, _ = generate_hydrometeorological_dataset(
+        n_samples=200, random_state=42, label_noise=0.0, missing_sensor_rate=0.0
+    )
+    X_noisy, y_noisy, _ = generate_hydrometeorological_dataset(
+        n_samples=200, random_state=42, label_noise=0.10, missing_sensor_rate=0.20
+    )
+
+    # Some labels should be flipped
+    assert not np.array_equal(y_clean, y_noisy)
+    # Differences in features due to missing sensor fallback
+    assert not np.array_equal(X_clean, X_noisy)
+
+
 def test_train_models_and_metrics(tmp_path):
     output_dir = str(tmp_path / "models")
     train_models(output_dir=output_dir)
@@ -82,9 +96,12 @@ def test_train_models_and_metrics(tmp_path):
     # Check files exist
     assert os.path.exists(os.path.join(output_dir, "lightgbm_flood_classifier.joblib"))
     assert os.path.exists(os.path.join(output_dir, "baseline_flood_model.joblib"))
+    assert os.path.exists(os.path.join(output_dir, "ensemble_flood_model.joblib"))
     assert os.path.exists(os.path.join(output_dir, "lstm_hydrology_model.npz"))
     assert os.path.exists(os.path.join(output_dir, "metrics_lightgbm.json"))
     assert os.path.exists(os.path.join(output_dir, "metrics_baseline.json"))
+    assert os.path.exists(os.path.join(output_dir, "metrics_holdout.json"))
+    assert os.path.exists(os.path.join(output_dir, "metrics_ensemble.json"))
     assert os.path.exists(os.path.join(output_dir, "metrics_lstm.json"))
 
     # Validate MLflow-lite metrics structure
@@ -93,6 +110,21 @@ def test_train_models_and_metrics(tmp_path):
         assert "metrics" in metrics
         assert metrics["metrics"]["roc_auc"] >= 0.70
         assert "advisory" in metrics["disclaimer"].lower()
+
+    # Validate holdout metrics structure
+    with open(os.path.join(output_dir, "metrics_holdout.json")) as f:
+        holdout = json.load(f)
+        assert len(holdout["folds"]) == 5
+        for metric in ["roc_auc", "pr_auc", "f1", "precision", "recall", "brier"]:
+            assert metric in holdout["mean_metrics"]
+            assert metric in holdout["folds"][0]
+
+    # Validate ensemble metrics structure
+    with open(os.path.join(output_dir, "metrics_ensemble.json")) as f:
+        ens = json.load(f)
+        assert "metrics" in ens
+        assert ens["metrics"]["roc_auc"] >= 0.70
+        assert "holdout_evaluation" in ens
 
 
 def test_flood_risk_predictor(tmp_path):

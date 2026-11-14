@@ -1,0 +1,209 @@
+{
+  "model_name": "Soft-Voting Ensemble (RandomForest + LightGBM)",
+  "timestamp": "2026-11-14T06:01:58.582607Z",
+  "dataset_size": 1000,
+  "metrics": {
+    "accuracy": 0.952,
+    "roc_auc": 0.8054,
+    "pr_auc": 0.6188,
+    "f1_score": 0.6962,
+    "precision": 0.9322,
+    "recall": 0.5556,
+    "brier_score": 0.0458,
+    "confusion_matrix": [
+      [
+        897,
+        4
+      ],
+      [
+        44,
+        55
+      ]
+    ]
+  },
+  "feature_importances": {
+    "rain_1h_mm": 0.0849,
+    "rain_3h_mm": 0.0847,
+    "rain_6h_mm": 0.06,
+    "rain_24h_mm": 0.0661,
+    "rain_peak_rate_mmh": 0.1031,
+    "antecedent_precip_index_7d": 0.0635,
+    "soil_moisture_surface_ratio": 0.0432,
+    "soil_moisture_deep_ratio": 0.0696,
+    "elevation_m": 0.0445,
+    "slope_degrees": 0.0629,
+    "river_discharge_m3s": 0.0833,
+    "discharge_percentile_anomaly": 0.094,
+    "sensor_level_m": 0.0365,
+    "sensor_rate_of_rise_mh": 0.0517,
+    "sensor_danger_ratio": 0.0523
+  },
+  "disclaimer": "ADVISORY ONLY. Model metrics derived against hydro-meteorological proxy thresholds. Follow official IMD/CWC/NDMA warnings.",
+  "holdout_evaluation": {
+    "protocol": "leave_one_basin_out",
+    "folds": [
+      {
+        "roc_auc": 0.732,
+        "pr_auc": 0.5343,
+        "f1": 0.6412,
+        "f1_score": 0.6412,
+        "precision": 0.913,
+        "recall": 0.4941,
+        "brier": 0.0458,
+        "brier_score": 0.0458,
+        "fold": 0,
+        "basin_index": 0,
+        "basin_name": "Alaknanda Basin (Chamoli)"
+      },
+      {
+        "roc_auc": 0.7896,
+        "pr_auc": 0.6514,
+        "f1": 0.6935,
+        "f1_score": 0.6935,
+        "precision": 0.9324,
+        "recall": 0.552,
+        "brier": 0.0573,
+        "brier_score": 0.0573,
+        "fold": 1,
+        "basin_index": 1,
+        "basin_name": "Mandakini Basin (Rudraprayag)"
+      },
+      {
+        "roc_auc": 0.7357,
+        "pr_auc": 0.5702,
+        "f1": 0.6197,
+        "f1_score": 0.6197,
+        "precision": 0.9778,
+        "recall": 0.4536,
+        "brier": 0.0509,
+        "brier_score": 0.0509,
+        "fold": 2,
+        "basin_index": 2,
+        "basin_name": "Bhagirathi Basin (Uttarkashi)"
+      },
+      {
+        "roc_auc": 0.7639,
+        "pr_auc": 0.6236,
+        "f1": 0.6994,
+        "f1_score": 0.6994,
+        "precision": 0.9194,
+        "recall": 0.5644,
+        "brier": 0.0462,
+        "brier_score": 0.0462,
+        "fold": 3,
+        "basin_index": 3,
+        "basin_name": "Chaliyar / Iruvanji Basin (Wayanad)"
+      },
+      {
+        "roc_auc": 0.756,
+        "pr_auc": 0.6322,
+        "f1": 0.7246,
+        "f1_score": 0.7246,
+        "precision": 0.9804,
+        "recall": 0.5747,
+        "brier": 0.0376,
+        "brier_score": 0.0376,
+        "fold": 4,
+        "basin_index": 4,
+        "basin_name": "Periyar Basin (Idukki)"
+      }
+    ],
+    "mean_metrics": {
+      "roc_auc": 0.7554,
+      "pr_auc": 0.6023,
+      "f1": 0.6757,
+      "f1_score": 0.6757,
+      "precision": 0.9446,
+      "recall": 0.5278,
+      "brier": 0.0476,
+      "brier_score": 0.0476
+    }
+  },
+  "folds": [
+    {
+      "roc_auc": 0.732,
+      "pr_auc": 0.5343,
+      "f1": 0.6412,
+      "f1_score": 0.6412,
+      "precision": 0.913,
+      "recall": 0.4941,
+      "brier": 0.0458,
+      "brier_score": 0.0458,
+      "fold": 0,
+      "basin_index": 0,
+      "basin_name": "Alaknanda Basin (Chamoli)"
+    },
+    {
+      "roc_auc": 0.7896,
+      "pr_auc": 0.6514,
+      "f1": 0.6935,
+      "f1_score": 0.6935,
+      "precision": 0.9324,
+      "recall": 0.552,
+      "brier": 0.0573,
+      "brier_score": 0.0573,
+      "fold": 1,
+      "basin_index": 1,
+      "basin_name": "Mandakini Basin (Rudraprayag)"
+    },
+    {
+      "roc_auc": 0.7357,
+      "pr_auc": 0.5702,
+      "f1": 0.6197,
+      "f1_score": 0.6197,
+      "precision": 0.9778,
+      "recall": 0.4536,
+      "brier": 0.0509,
+      "brier_score": 0.0509,
+      "fold": 2,
+      "basin_index": 2,
+      "basin_name": "Bhagirathi Basin (Uttarkashi)"
+    },
+    {
+      "roc_auc": 0.7639,
+      "pr_auc": 0.6236,
+      "f1": 0.6994,
+      "f1_score": 0.6994,
+      "precision": 0.9194,
+      "recall": 0.5644,
+      "brier": 0.0462,
+      "brier_score": 0.0462,
+      "fold": 3,
+      "basin_index": 3,
+      "basin_name": "Chaliyar / Iruvanji Basin (Wayanad)"
+    },
+    {
+      "roc_auc": 0.756,
+      "pr_auc": 0.6322,
+      "f1": 0.7246,
+      "f1_score": 0.7246,
+      "precision": 0.9804,
+      "recall": 0.5747,
+      "brier": 0.0376,
+      "brier_score": 0.0376,
+      "fold": 4,
+      "basin_index": 4,
+      "basin_name": "Periyar Basin (Idukki)"
+    }
+  ],
+  "mean_metrics": {
+    "roc_auc": 0.7554,
+    "pr_auc": 0.6023,
+    "f1": 0.6757,
+    "f1_score": 0.6757,
+    "precision": 0.9446,
+    "recall": 0.5278,
+    "brier": 0.0476,
+    "brier_score": 0.0476
+  },
+  "mean": {
+    "roc_auc": 0.7554,
+    "pr_auc": 0.6023,
+    "f1": 0.6757,
+    "f1_score": 0.6757,
+    "precision": 0.9446,
+    "recall": 0.5278,
+    "brier": 0.0476,
+    "brier_score": 0.0476
+  }
+}

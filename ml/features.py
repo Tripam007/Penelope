@@ -72,8 +72,15 @@ def extract_features_vector(raw_dict: Dict[str, Any]) -> List[float]:
     rain_peak = float(raw_dict.get("rain_peak_rate_mmh", rain_1h))
 
     # Soil moisture ratios (relative to saturation capacity ~0.45 m³/m³)
-    sm_surf = float(raw_dict.get("soil_moisture_0_to_1cm", 0.25)) / 0.45
-    sm_deep = float(raw_dict.get("soil_moisture_9_to_27cm", 0.28)) / 0.45
+    if "soil_moisture_surface_ratio" in raw_dict and raw_dict["soil_moisture_surface_ratio"] is not None:
+        sm_surf = float(raw_dict["soil_moisture_surface_ratio"])
+    else:
+        sm_surf = float(raw_dict.get("soil_moisture_0_to_1cm", 0.25)) / 0.45
+
+    if "soil_moisture_deep_ratio" in raw_dict and raw_dict["soil_moisture_deep_ratio"] is not None:
+        sm_deep = float(raw_dict["soil_moisture_deep_ratio"])
+    else:
+        sm_deep = float(raw_dict.get("soil_moisture_9_to_27cm", 0.28)) / 0.45
 
     api = float(raw_dict.get("antecedent_precip_index_7d", rain_24h * 0.75))
     elev = float(raw_dict.get("elevation_m", 1200.0))
@@ -82,10 +89,19 @@ def extract_features_vector(raw_dict: Dict[str, Any]) -> List[float]:
     discharge = float(raw_dict.get("river_discharge_m3s", 15.0))
     discharge_pct = float(raw_dict.get("discharge_percentile_anomaly", 0.50))
 
-    sensor_level = float(raw_dict.get("sensor_level_m", 2.2))
-    sensor_ror = float(raw_dict.get("sensor_rate_of_rise_mh", 0.05))
-    danger_mark = float(raw_dict.get("sensor_danger_mark_m", 5.0))
-    sensor_ratio = float(sensor_level / max(danger_mark, 0.1))
+    sensor_level_val = raw_dict.get("sensor_level_m")
+    sensor_level = float(sensor_level_val) if sensor_level_val is not None else 2.2
+
+    sensor_ror_val = raw_dict.get("sensor_rate_of_rise_mh")
+    sensor_ror = float(sensor_ror_val) if sensor_ror_val is not None else 0.05
+
+    danger_mark_val = raw_dict.get("sensor_danger_mark_m")
+    danger_mark = float(danger_mark_val) if danger_mark_val is not None else 5.0
+
+    if "sensor_danger_ratio" in raw_dict and raw_dict["sensor_danger_ratio"] is not None:
+        sensor_ratio = float(raw_dict["sensor_danger_ratio"])
+    else:
+        sensor_ratio = float(sensor_level / max(danger_mark, 0.1))
 
     return [
         max(0.0, rain_1h),
