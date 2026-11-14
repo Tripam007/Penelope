@@ -102,6 +102,49 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* =========================================================================
+   MapLibre GL JS Popup Overrides - Pure Frosted Glass (No White Box / Tip)
+   ========================================================================= */
+.maplibregl-popup {
+  z-index: 50 !important;
+}
+
+.maplibregl-popup-content {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border-radius: 1.25rem !important;
+  padding: 0 !important;
+  border: none !important;
+}
+
+.maplibregl-popup-tip {
+  display: none !important;
+  border: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.maplibregl-popup-close-button {
+  color: #94a3b8 !important;
+  font-size: 16px !important;
+  padding: 4px 8px !important;
+  top: 10px !important;
+  right: 12px !important;
+  border-radius: 9999px !important;
+  transition: all 0.2s ease !important;
+  z-index: 30 !important;
+  outline: none !important;
+}
+
+.maplibregl-popup-close-button:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+}
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
 /* Apple visionOS Glass Layer Classes */
 .glass-surface-1 {
   background-color: var(--glass-1-bg);

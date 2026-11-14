@@ -111,11 +111,11 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
         const riskColor = getRiskColorClass(liveData.risk_level);
 
         const popup = new maplibregl.Popup({ offset: 15, maxWidth: "340px" }).setHTML(`
-          <div class="p-3 text-slate-100 bg-slate-950 rounded-2xl border border-teal-500/50 font-sans shadow-2xl space-y-2">
-            <div class="flex items-start justify-between border-b border-slate-800 pb-2">
+          <div class="p-3.5 text-slate-100 bg-slate-950/80 backdrop-blur-2xl rounded-2xl border border-teal-500/40 font-sans shadow-[0_20px_50px_rgba(0,0,0,0.85)] space-y-2.5">
+            <div class="flex items-start justify-between border-b border-white/10 pb-2">
               <div>
                 <div class="flex items-center gap-1.5">
-                  <span class="w-2 h-2 rounded-full bg-teal-400 animate-pulse"></span>
+                  <span class="w-2 h-2 rounded-full bg-teal-400 animate-pulse shadow-[0_0_8px_#2dd4bf]"></span>
                   <h4 class="font-bold text-xs text-teal-300">Live Real-Time Query</h4>
                 </div>
                 <div class="text-[10px] text-slate-400 font-mono mt-0.5">
@@ -123,50 +123,50 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
                 </div>
               </div>
               <div class="text-right">
-                <span class="text-[9px] text-slate-400 block">GROUND ELEVATION</span>
+                <span class="text-[9px] text-slate-400 block font-sans">GROUND ELEVATION</span>
                 <span class="text-xs font-black text-amber-300 font-mono">${liveData.elevation_m}m ASL</span>
               </div>
             </div>
 
-            <div class="p-2 rounded-xl bg-slate-900 border border-slate-800/80">
-              <div class="flex items-center justify-between text-[10px] text-sky-400 font-bold mb-1">
+            <div class="p-2.5 rounded-xl bg-white/[0.04] backdrop-blur-md border border-white/10">
+              <div class="flex items-center justify-between text-[10px] text-sky-400 font-bold mb-1.5">
                 <span>🌧️ Live Open-Meteo Rain</span>
-                <span class="text-amber-400">Peak: ${liveData.peak_rain_rate_mmh} mm/h</span>
+                <span class="text-amber-400 font-mono">Peak: ${liveData.peak_rain_rate_mmh} mm/h</span>
               </div>
-              <div class="grid grid-cols-4 gap-1 text-center font-mono">
-                <div class="p-1 rounded bg-slate-950 border border-slate-800">
-                  <span class="text-[8px] text-slate-400 block">1H</span>
+              <div class="grid grid-cols-4 gap-1.5 text-center font-mono">
+                <div class="p-1 rounded-lg bg-black/40 border border-white/10">
+                  <span class="text-[8px] text-slate-400 block font-sans">1H</span>
                   <span class="text-[10px] font-bold text-sky-300">${liveData.rain_1h_mm}m</span>
                 </div>
-                <div class="p-1 rounded bg-slate-950 border border-slate-800">
-                  <span class="text-[8px] text-slate-400 block">3H</span>
+                <div class="p-1 rounded-lg bg-black/40 border border-white/10">
+                  <span class="text-[8px] text-slate-400 block font-sans">3H</span>
                   <span class="text-[10px] font-bold text-sky-300">${liveData.rain_3h_mm}m</span>
                 </div>
-                <div class="p-1 rounded bg-slate-950 border border-slate-800">
-                  <span class="text-[8px] text-slate-400 block">6H</span>
+                <div class="p-1 rounded-lg bg-black/40 border border-white/10">
+                  <span class="text-[8px] text-slate-400 block font-sans">6H</span>
                   <span class="text-[10px] font-bold text-sky-300">${liveData.rain_6h_mm}m</span>
                 </div>
-                <div class="p-1 rounded bg-slate-950 border border-slate-800">
-                  <span class="text-[8px] text-slate-400 block">24H</span>
+                <div class="p-1 rounded-lg bg-black/40 border border-white/10">
+                  <span class="text-[8px] text-slate-400 block font-sans">24H</span>
                   <span class="text-[10px] font-bold text-amber-400">${liveData.rain_24h_mm}m</span>
                 </div>
               </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-1.5 text-[10px]">
-              <div class="p-1.5 rounded-lg bg-slate-900 border border-slate-800">
+            <div class="grid grid-cols-2 gap-2 text-[10px]">
+              <div class="p-2 rounded-xl bg-white/[0.04] backdrop-blur-md border border-white/10">
                 <span class="text-slate-400 block text-[9px]">GLOFAS DISCHARGE</span>
                 <span class="font-bold text-white font-mono">${liveData.river_discharge_m3s} m³/s</span>
-                <span class="text-[8px] text-slate-500 block">Anomaly: ${liveData.river_anomaly_m3s > 0 ? "+" : ""}${liveData.river_anomaly_m3s} m³/s</span>
+                <span class="text-[8px] text-slate-400 block font-mono">Surge: ${liveData.river_anomaly_m3s > 0 ? "+" : ""}${liveData.river_anomaly_m3s} m³/s</span>
               </div>
-              <div class="p-1.5 rounded-lg bg-slate-900 border border-slate-800">
+              <div class="p-2 rounded-xl bg-white/[0.04] backdrop-blur-md border border-white/10">
                 <span class="text-slate-400 block text-[9px]">SOIL SATURATION</span>
                 <span class="font-bold text-purple-300 font-mono">${Math.round(liveData.soil_ratios.saturation_ratio * 100)}%</span>
-                <span class="text-[8px] text-slate-500 block">API: ${liveData.antecedent_index}</span>
+                <span class="text-[8px] text-slate-400 block font-mono">API: ${liveData.antecedent_index}</span>
               </div>
             </div>
 
-            <div class="p-1.5 rounded-lg border flex items-center justify-between" style="border-color: ${riskColor.hex}50; background: ${riskColor.hex}15">
+            <div class="p-2 rounded-xl border flex items-center justify-between" style="border-color: ${riskColor.hex}50; background: ${riskColor.hex}18">
               <span class="text-[10px] font-bold" style="color: ${riskColor.hex}">
                 ${liveData.risk_level} FLASH-FLOOD RISK
               </span>
@@ -175,7 +175,7 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
               </span>
             </div>
 
-            <div class="text-[9px] text-slate-500 flex justify-between border-t border-slate-800/80 pt-1">
+            <div class="text-[9px] text-slate-400 flex justify-between border-t border-white/10 pt-1.5">
               <span>Source: Open-Meteo & GloFAS</span>
               <span>Updated: ${liveData.fetched_at} IST</span>
             </div>
@@ -284,26 +284,26 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
           </div>
         `;
 
-        const popup = new maplibregl.Popup({ offset: 15, maxWidth: "300px" }).setHTML(`
-          <div class="p-3 text-slate-100 bg-slate-950 rounded-xl border border-cyan-500/40 font-sans shadow-xl">
-            <div class="flex items-center gap-2 border-b border-cyan-800/60 pb-1.5 mb-2">
+        const popup = new maplibregl.Popup({ offset: 15, maxWidth: "320px" }).setHTML(`
+          <div class="p-3.5 text-slate-100 bg-slate-950/80 backdrop-blur-2xl rounded-2xl border border-cyan-500/40 font-sans shadow-[0_20px_50px_rgba(0,0,0,0.85)] space-y-2.5">
+            <div class="flex items-center gap-2 border-b border-white/10 pb-2 mb-1">
               <span class="text-sm">📡</span>
               <div>
                 <h4 class="font-bold text-xs text-cyan-300">${p.name}</h4>
                 <p class="text-[10px] text-slate-400">${stateName} · River: ${p.river_name}</p>
               </div>
             </div>
-            <div class="grid grid-cols-2 gap-2 text-[11px] mb-2 font-mono">
-              <div class="p-1.5 rounded bg-slate-900 border border-slate-800">
+            <div class="grid grid-cols-2 gap-2 text-[11px] font-mono">
+              <div class="p-2 rounded-xl bg-white/[0.04] backdrop-blur-md border border-white/10">
                 <span class="text-slate-400 block text-[9px] font-sans">WATER STAGE</span>
                 <span class="font-bold text-cyan-400">${waterLevel} m</span>
               </div>
-              <div class="p-1.5 rounded bg-slate-900 border border-slate-800">
+              <div class="p-2 rounded-xl bg-white/[0.04] backdrop-blur-md border border-white/10">
                 <span class="text-slate-400 block text-[9px] font-sans">DISCHARGE</span>
                 <span class="font-bold text-amber-300">${dischargeM3s} m³/s</span>
               </div>
             </div>
-            <div class="text-[10px] text-slate-400 flex justify-between border-t border-slate-800 pt-1">
+            <div class="text-[10px] text-slate-400 flex justify-between border-t border-white/10 pt-1.5">
               <span>Danger Mark: <b>${dangerLevel}m</b></span>
               <span class="text-emerald-400 font-semibold">${p.status || "ACTIVE"}</span>
             </div>
@@ -338,18 +338,18 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
           </div>
         `;
 
-        const popup = new maplibregl.Popup({ offset: 15, maxWidth: "320px" }).setHTML(`
-          <div class="p-3 text-slate-100 bg-slate-950 rounded-xl border border-emerald-500/40 font-sans shadow-xl">
-            <div class="flex items-center gap-2 border-b border-emerald-800/60 pb-1.5 mb-2">
+        const popup = new maplibregl.Popup({ offset: 15, maxWidth: "340px" }).setHTML(`
+          <div class="p-3.5 text-slate-100 bg-slate-950/80 backdrop-blur-2xl rounded-2xl border border-emerald-500/40 font-sans shadow-[0_20px_50px_rgba(0,0,0,0.85)] space-y-2.5">
+            <div class="flex items-center gap-2 border-b border-white/10 pb-2 mb-1">
               <span class="text-sm">⛺</span>
               <div>
                 <h4 class="font-bold text-xs text-emerald-300">${displayName}</h4>
-                <span class="text-[9px] bg-emerald-500/20 text-emerald-400 px-1 rounded border border-emerald-500/30">${stateName} Safe Evacuation Camp</span>
+                <span class="text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.2 rounded border border-emerald-500/30">${stateName} Safe Evacuation Camp</span>
               </div>
             </div>
-            <div class="space-y-1.5 text-[11px] text-slate-300 mb-2">
-              <div class="flex justify-between"><span>Capacity:</span> <b class="text-white">${p.capacity || 400} Persons</b></div>
-              <div class="flex justify-between"><span>Safe Ground Elevation:</span> <b class="text-emerald-400">${groundHeight} meters</b></div>
+            <div class="space-y-1.5 text-[11px] text-slate-300 p-2.5 rounded-xl bg-white/[0.04] backdrop-blur-md border border-white/10">
+              <div class="flex justify-between"><span>Capacity:</span> <b class="text-white font-mono">${p.capacity || 400} Persons</b></div>
+              <div class="flex justify-between"><span>Safe Ground Elevation:</span> <b class="text-emerald-400 font-mono">${groundHeight} meters</b></div>
               <div class="flex justify-between"><span>Relief Contact:</span> <b class="text-white">${p.contact_phone || "+91-1372-252101"}</b></div>
             </div>
           </div>
@@ -407,18 +407,18 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
       `;
 
       const popup = new maplibregl.Popup({ offset: 15, maxWidth: "340px" }).setHTML(`
-        <div class="p-3 text-slate-100 bg-slate-950 rounded-2xl border border-slate-800 font-sans shadow-2xl space-y-2">
-          <div class="flex items-start justify-between border-b border-slate-800 pb-2">
+        <div class="p-3.5 text-slate-100 bg-slate-950/80 backdrop-blur-2xl rounded-2xl border border-white/15 font-sans shadow-[0_20px_50px_rgba(0,0,0,0.85)] space-y-2.5">
+          <div class="flex items-start justify-between border-b border-white/10 pb-2">
             <div>
               <div class="flex items-center gap-1.5">
                 <span class="text-sm">${icon}</span>
                 <h4 class="font-bold text-xs text-white">${displayName}</h4>
               </div>
               <div class="flex items-center gap-1.5 mt-0.5">
-                <span class="text-[9px] px-1.5 py-0.2 rounded font-bold uppercase tracking-wider bg-slate-800 text-slate-300">
+                <span class="text-[9px] px-1.5 py-0.2 rounded font-bold uppercase tracking-wider bg-white/10 text-slate-300">
                   ${stateName} · ${badgeLabel}
                 </span>
-                <span class="text-[9px] px-1.5 py-0.2 rounded font-bold uppercase" style="background-color: ${riskColor.hex}22; color: ${riskColor.hex}">
+                <span class="text-[9px] px-1.5 py-0.2 rounded font-bold uppercase" style="background-color: ${riskColor.hex}25; color: ${riskColor.hex}">
                   ${p.risk_level || "MODERATE"} RISK (${riskPercent}%)
                 </span>
               </div>
@@ -429,45 +429,45 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
             </div>
           </div>
 
-          <div class="p-2 rounded-xl bg-slate-900/90 border border-slate-800/80">
-            <div class="flex items-center justify-between text-[10px] text-sky-400 font-bold mb-1">
+          <div class="p-2.5 rounded-xl bg-white/[0.04] backdrop-blur-md border border-white/10">
+            <div class="flex items-center justify-between text-[10px] text-sky-400 font-bold mb-1.5">
               <span>🌧️ Open-Meteo Rain Forecast</span>
-              <span class="text-amber-400">Peak: ${peakRate} mm/h</span>
+              <span class="text-amber-400 font-mono">Peak: ${peakRate} mm/h</span>
             </div>
-            <div class="grid grid-cols-4 gap-1 text-center font-mono">
-              <div class="p-1 rounded bg-slate-950 border border-slate-800/60">
+            <div class="grid grid-cols-4 gap-1.5 text-center font-mono">
+              <div class="p-1 rounded-lg bg-black/40 border border-white/10">
                 <span class="text-[8px] text-slate-400 block font-sans">1H</span>
                 <span class="text-[10px] font-bold text-sky-300">${rain1h}mm</span>
               </div>
-              <div class="p-1 rounded bg-slate-950 border border-slate-800/60">
+              <div class="p-1 rounded-lg bg-black/40 border border-white/10">
                 <span class="text-[8px] text-slate-400 block font-sans">3H</span>
                 <span class="text-[10px] font-bold text-sky-300">${rain3h}mm</span>
               </div>
-              <div class="p-1 rounded bg-slate-950 border border-slate-800/60">
+              <div class="p-1 rounded-lg bg-black/40 border border-white/10">
                 <span class="text-[8px] text-slate-400 block font-sans">6H</span>
                 <span class="text-[10px] font-bold text-sky-300">${rain6h}mm</span>
               </div>
-              <div class="p-1 rounded bg-slate-950 border border-slate-800/60">
+              <div class="p-1 rounded-lg bg-black/40 border border-white/10">
                 <span class="text-[8px] text-slate-400 block font-sans">24H</span>
                 <span class="text-[10px] font-bold text-amber-400">${rain24h}mm</span>
               </div>
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-1.5 text-[10px]">
-            <div class="p-1.5 rounded-xl bg-slate-900 border border-slate-800">
+          <div class="grid grid-cols-2 gap-2 text-[10px]">
+            <div class="p-2 rounded-xl bg-white/[0.04] backdrop-blur-md border border-white/10">
               <span class="text-slate-400 block text-[9px]">ANTECEDENT INDEX</span>
               <span class="text-xs font-bold text-teal-300 font-mono">${antecedentIdx}</span>
               <span class="text-[8px] text-slate-500 block">7-day memory</span>
             </div>
-            <div class="p-1.5 rounded-xl bg-slate-900 border border-slate-800">
+            <div class="p-2 rounded-xl bg-white/[0.04] backdrop-blur-md border border-white/10">
               <span class="text-slate-400 block text-[9px]">SOIL SATURATION</span>
               <span class="text-xs font-bold text-purple-300 font-mono">${soilSat}%</span>
               <span class="text-[8px] text-slate-500 block">Root-zone ratio</span>
             </div>
           </div>
 
-          <div class="p-2 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between text-[11px]">
+          <div class="p-2.5 rounded-xl bg-white/[0.04] backdrop-blur-md border border-white/10 flex items-center justify-between text-[11px]">
             <div>
               <span class="text-[9px] text-slate-400 block font-sans">GLOFAS DISCHARGE</span>
               <span class="font-bold text-cyan-300 font-mono">${dischargeM3s} m³/s</span>
@@ -482,9 +482,12 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
 
           <button
             id="btn-inspect-${p.id}"
-            class="w-full mt-1 py-1.5 px-3 rounded-lg bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/40 text-teal-200 text-xs font-bold transition flex items-center justify-center gap-1.5"
+            class="w-full mt-1.5 py-2 px-3 rounded-xl bg-teal-500/20 hover:bg-teal-500/35 border border-teal-400/40 text-teal-200 text-xs font-bold transition shadow-[0_4px_16px_rgba(20,184,166,0.25)] flex items-center justify-center gap-1.5"
           >
             <span>Open Diagnostic Profile</span>
+            <span>→</span>
+          </button>
+        </div>
             <span>→</span>
           </button>
         </div>
