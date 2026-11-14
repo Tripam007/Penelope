@@ -124,7 +124,15 @@ div.maplibregl-popup-content {
 
 .maplibregl-popup-tip,
 .frosted-glass-maplibre-popup .maplibregl-popup-tip,
-div.maplibregl-popup-tip {
+div.maplibregl-popup-tip,
+.maplibregl-popup-anchor-top .maplibregl-popup-tip,
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
+.maplibregl-popup-anchor-left .maplibregl-popup-tip,
+.maplibregl-popup-anchor-right .maplibregl-popup-tip,
+.maplibregl-popup-anchor-top-left .maplibregl-popup-tip,
+.maplibregl-popup-anchor-top-right .maplibregl-popup-tip,
+.maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,
+.maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip {
   display: none !important;
   border: none !important;
   width: 0 !important;
@@ -135,46 +143,60 @@ div.maplibregl-popup-tip {
 
 .maplibregl-popup-close-button,
 .frosted-glass-maplibre-popup .maplibregl-popup-close-button {
-  color: #94a3b8 !important;
-  font-size: 16px !important;
-  padding: 4px 8px !important;
-  top: 10px !important;
-  right: 12px !important;
-  border-radius: 9999px !important;
-  transition: all 0.2s ease !important;
-  z-index: 30 !important;
-  outline: none !important;
-}
-
-.maplibregl-popup-close-button:hover,
-.frosted-glass-maplibre-popup .maplibregl-popup-close-button:hover {
-  background: rgba(255, 255, 255, 0.15) !important;
-  color: #ffffff !important;
+  display: none !important;
 }
 
 /* =========================================================================
    Apple visionOS / macOS Frosted Glass Box Styles
    ========================================================================= */
 .apple-glass-panel {
-  background: rgba(10, 16, 32, 0.75) !important;
-  backdrop-filter: blur(28px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 40%, rgba(15, 23, 42, 0.40) 100%) !important;
+  backdrop-filter: blur(28px) saturate(210%) brightness(1.15) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(210%) brightness(1.15) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
   box-shadow: 
-    0 0 0 1px rgba(255, 255, 255, 0.05),
-    0 24px 60px -15px rgba(0, 0, 0, 0.85) !important;
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.35),
+    0 24px 60px -15px rgba(0, 0, 0, 0.75) !important;
 }
 
 .apple-glass-card {
-  background: rgba(255, 255, 255, 0.045) !important;
-  backdrop-filter: blur(16px) saturate(160%) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(160%) !important;
-  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+  background: rgba(255, 255, 255, 0.075) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  box-shadow: 
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.20),
+    0 4px 16px -2px rgba(0, 0, 0, 0.25) !important;
 }
 
 .apple-glass-tile {
-  background: rgba(0, 0, 0, 0.35) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: rgba(255, 255, 255, 0.055) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.14) !important;
+}
+
+.apple-glass-btn {
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.32) 0%, rgba(20, 184, 166, 0.14) 100%) !important;
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  border: 1px solid rgba(45, 212, 191, 0.45) !important;
+  box-shadow: 
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.32),
+    0 4px 16px rgba(20, 184, 166, 0.25) !important;
+  color: #ccfbf1 !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.apple-glass-btn:hover {
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.50) 0%, rgba(20, 184, 166, 0.25) 100%) !important;
+  border-color: rgba(45, 212, 191, 0.70) !important;
+  box-shadow: 
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.45),
+    0 6px 22px rgba(20, 184, 166, 0.40) !important;
+  transform: translateY(-1px);
 }
 .tabular-nums {
   font-variant-numeric: tabular-nums;

@@ -33,6 +33,7 @@ function createFrostedPopup(maxWidth: string = "340px"): Popup {
   const popup = new maplibregl.Popup({
     offset: 15,
     maxWidth,
+    closeButton: false,
     className: "frosted-glass-maplibre-popup",
   });
 
@@ -158,7 +159,7 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
         const popup = createFrostedPopup("340px").setHTML(`
           <div class="p-3.5 text-slate-100 apple-glass-panel rounded-2xl border border-teal-500/40 font-sans shadow-2xl space-y-2.5">
             <div class="flex items-start justify-between border-b border-white/10 pb-2">
-              <div>
+              <div class="pr-2">
                 <div class="flex items-center gap-1.5">
                   <span class="w-2 h-2 rounded-full bg-teal-400 animate-pulse shadow-[0_0_8px_#2dd4bf]"></span>
                   <h4 class="font-bold text-xs text-teal-300">Live Real-Time Query</h4>
@@ -167,9 +168,21 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
                   ${lat.toFixed(4)}°N, ${lng.toFixed(4)}°E
                 </div>
               </div>
-              <div class="text-right">
-                <span class="text-[9px] text-slate-400 block font-sans">GROUND ELEVATION</span>
-                <span class="text-xs font-black text-amber-300 font-mono">${liveData.elevation_m}m ASL</span>
+              <div class="flex items-start gap-2.5 shrink-0">
+                <div class="text-right">
+                  <span class="text-[9px] text-slate-400 block font-sans">GROUND ELEVATION</span>
+                  <span class="text-xs font-black text-amber-300 font-mono">${liveData.elevation_m}m ASL</span>
+                </div>
+                <button
+                  id="btn-close-live-popup"
+                  class="p-1 rounded-full text-slate-400 hover:text-white hover:bg-white/15 transition -mt-0.5"
+                  title="Close"
+                >
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
               </div>
             </div>
 
@@ -226,6 +239,17 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
             </div>
           </div>
         `);
+
+        popup.on("open", () => {
+          const popupEl = popup.getElement();
+          const closeBtn = popupEl?.querySelector("#btn-close-live-popup");
+          if (closeBtn) {
+            closeBtn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              popup.remove();
+            });
+          }
+        });
 
         const newMarker = new maplibregl.Marker({ element: el })
           .setLngLat([lng, lat])
@@ -331,12 +355,24 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
 
         const popup = createFrostedPopup("320px").setHTML(`
           <div class="p-3.5 text-slate-100 apple-glass-panel rounded-2xl border border-cyan-500/40 font-sans shadow-2xl space-y-2.5">
-            <div class="flex items-center gap-2 border-b border-white/10 pb-2 mb-1">
-              <span class="text-sm">📡</span>
-              <div>
-                <h4 class="font-bold text-xs text-cyan-300">${p.name}</h4>
-                <p class="text-[10px] text-slate-400">${stateName} · River: ${p.river_name}</p>
+            <div class="flex items-start justify-between border-b border-white/10 pb-2 mb-1">
+              <div class="flex items-center gap-2">
+                <span class="text-sm">📡</span>
+                <div>
+                  <h4 class="font-bold text-xs text-cyan-300">${p.name}</h4>
+                  <p class="text-[10px] text-slate-400">${stateName} · River: ${p.river_name}</p>
+                </div>
               </div>
+              <button
+                id="btn-close-sensor-${p.id}"
+                class="p-1 rounded-full text-slate-400 hover:text-white hover:bg-white/15 transition -mt-0.5 cursor-pointer shrink-0"
+                title="Close"
+              >
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
             </div>
             <div class="grid grid-cols-2 gap-2 text-[11px] font-mono">
               <div class="p-2 rounded-xl apple-glass-card">
@@ -354,6 +390,17 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
             </div>
           </div>
         `);
+
+        popup.on("open", () => {
+          const popupEl = popup.getElement();
+          const closeBtn = popupEl?.querySelector(`#btn-close-sensor-${p.id}`);
+          if (closeBtn) {
+            closeBtn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              popup.remove();
+            });
+          }
+        });
 
         el.addEventListener("click", () => {
           if (p.sensor_code) setSelectedSensorCode(p.sensor_code);
@@ -385,12 +432,24 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
 
         const popup = createFrostedPopup("340px").setHTML(`
           <div class="p-3.5 text-slate-100 apple-glass-panel rounded-2xl border border-emerald-500/40 font-sans shadow-2xl space-y-2.5">
-            <div class="flex items-center gap-2 border-b border-white/10 pb-2 mb-1">
-              <span class="text-sm">⛺</span>
-              <div>
-                <h4 class="font-bold text-xs text-emerald-300">${displayName}</h4>
-                <span class="text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.2 rounded border border-emerald-500/30">${stateName} Safe Evacuation Camp</span>
+            <div class="flex items-start justify-between border-b border-white/10 pb-2 mb-1">
+              <div class="flex items-center gap-2">
+                <span class="text-sm">⛺</span>
+                <div>
+                  <h4 class="font-bold text-xs text-emerald-300">${displayName}</h4>
+                  <span class="text-[9px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.2 rounded border border-emerald-500/30">${stateName} Safe Evacuation Camp</span>
+                </div>
               </div>
+              <button
+                id="btn-close-shelter-${p.id}"
+                class="p-1 rounded-full text-slate-400 hover:text-white hover:bg-white/15 transition -mt-0.5 cursor-pointer shrink-0"
+                title="Close"
+              >
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
             </div>
             <div class="space-y-1.5 text-[11px] text-slate-300 p-2.5 rounded-xl apple-glass-card">
               <div class="flex justify-between"><span>Capacity:</span> <b class="text-white font-mono">${p.capacity || 400} Persons</b></div>
@@ -399,6 +458,17 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
             </div>
           </div>
         `);
+
+        popup.on("open", () => {
+          const popupEl = popup.getElement();
+          const closeBtn = popupEl?.querySelector(`#btn-close-shelter-${p.id}`);
+          if (closeBtn) {
+            closeBtn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              popup.remove();
+            });
+          }
+        });
 
         const marker = new maplibregl.Marker({ element: el })
           .setLngLat(coords as [number, number])
@@ -452,9 +522,9 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
       `;
 
       const popup = createFrostedPopup("340px").setHTML(`
-        <div class="p-3.5 text-slate-100 apple-glass-panel rounded-2xl border border-white/15 font-sans shadow-2xl space-y-2.5">
+        <div class="p-3.5 text-slate-100 apple-glass-panel rounded-2xl border border-white/20 font-sans shadow-2xl space-y-2.5">
           <div class="flex items-start justify-between border-b border-white/10 pb-2">
-            <div>
+            <div class="pr-2">
               <div class="flex items-center gap-1.5">
                 <span class="text-sm">${icon}</span>
                 <h4 class="font-bold text-xs text-white">${displayName}</h4>
@@ -468,9 +538,21 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
                 </span>
               </div>
             </div>
-            <div class="text-right">
-              <span class="text-[9px] text-slate-400 block font-sans">ELEVATION</span>
-              <span class="text-xs font-black text-amber-300 font-mono">${groundHeight}m</span>
+            <div class="flex items-start gap-2.5 shrink-0">
+              <div class="text-right">
+                <span class="text-[9px] text-slate-400 block font-sans">ELEVATION</span>
+                <span class="text-xs font-black text-amber-300 font-mono">${groundHeight}m</span>
+              </div>
+              <button
+                id="btn-close-popup-${p.id}"
+                class="p-1 rounded-full text-slate-400 hover:text-white hover:bg-white/15 transition -mt-0.5 cursor-pointer shrink-0"
+                title="Close"
+              >
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
             </div>
           </div>
 
@@ -528,7 +610,7 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
           <button
             id="btn-inspect-${p.id}"
             onclick="window.__openVillageDiagnostic && window.__openVillageDiagnostic('${p.id}')"
-            class="w-full mt-1.5 py-2 px-3 rounded-xl bg-teal-500/20 hover:bg-teal-500/35 border border-teal-400/40 text-teal-200 text-xs font-bold transition shadow-md flex items-center justify-center gap-1.5 cursor-pointer backdrop-blur-sm"
+            class="w-full mt-1.5 py-2 px-3 rounded-xl apple-glass-btn text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
           >
             <span>Open Diagnostic Profile</span>
             <span>→</span>
@@ -538,6 +620,13 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
 
       popup.on("open", () => {
         const popupEl = popup.getElement();
+        const closeBtn = popupEl?.querySelector(`#btn-close-popup-${p.id}`);
+        if (closeBtn) {
+          closeBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            popup.remove();
+          });
+        }
         const btn = popupEl?.querySelector(`#btn-inspect-${p.id}`) || document.getElementById(`btn-inspect-${p.id}`);
         if (btn) {
           btn.addEventListener("click", (e) => {
@@ -565,7 +654,7 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
   return (
     <div className="relative w-full h-full">
       {/* 1. Top Real-Time India Region Quick Jump Bar */}
-      <div className="absolute top-3 left-4 z-10 flex items-center gap-1.5 p-1 rounded-2xl bg-slate-950/90 backdrop-blur-2xl border border-white/15 shadow-2xl max-w-[calc(100vw-3rem)] overflow-x-auto scrollbar-none">
+      <div className="absolute top-3 left-4 z-10 flex items-center gap-1.5 p-1 rounded-2xl apple-glass-panel shadow-2xl max-w-[calc(100vw-3rem)] overflow-x-auto scrollbar-none">
         <span className="text-[10px] font-bold text-teal-400 uppercase tracking-wider px-2 flex items-center gap-1 shrink-0">
           <Globe className="w-3.5 h-3.5" />
           <span>India Regions:</span>
@@ -579,8 +668,8 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
               onClick={() => handleSelectRegion(region)}
               className={`px-2.5 py-1 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center gap-1.5 shrink-0 ${
                 isSelected
-                  ? "bg-teal-500 text-slate-950 font-bold shadow-md shadow-teal-500/30"
-                  : "text-slate-300 hover:text-white hover:bg-slate-900/80"
+                  ? "bg-teal-500/90 text-slate-950 font-bold shadow-md shadow-teal-500/30"
+                  : "apple-glass-card text-slate-200 hover:text-white hover:bg-white/15"
               }`}
             >
               <span>{region.id === "all-india" ? "🇮🇳" : "📍"}</span>
@@ -594,13 +683,13 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
       </div>
 
       {/* 2. Secondary Filter Bar (All Landmarks, High Risk, Villages, Tourist, Shelters) */}
-      <div className="absolute top-14 left-4 z-10 flex flex-wrap items-center gap-1.5 p-1 rounded-xl bg-slate-950/80 backdrop-blur-xl border border-white/10 shadow-xl max-w-[calc(100vw-3rem)] overflow-x-auto">
+      <div className="absolute top-14 left-4 z-10 flex flex-wrap items-center gap-1.5 p-1 rounded-xl apple-glass-panel shadow-xl max-w-[calc(100vw-3rem)] overflow-x-auto">
         <button
           onClick={() => setActiveFilter("all")}
           className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 ${
             activeFilter === "all"
-              ? "bg-white/20 text-white border border-white/30"
-              : "text-slate-400 hover:text-white"
+              ? "bg-white/25 text-white border border-white/35 shadow-sm"
+              : "text-slate-300 hover:text-white hover:bg-white/10"
           }`}
         >
           <Layers className="w-3 h-3" />
@@ -611,8 +700,8 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
           onClick={() => setActiveFilter("high_risk")}
           className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 ${
             activeFilter === "high_risk"
-              ? "bg-red-500 text-white shadow-sm"
-              : "text-red-400 hover:bg-red-500/10"
+              ? "bg-red-500/90 text-white shadow-sm"
+              : "text-red-400 hover:bg-red-500/15"
           }`}
         >
           <AlertTriangle className="w-3 h-3 text-red-400" />
@@ -622,7 +711,7 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
         <button
           onClick={() => setActiveFilter("villages")}
           className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 ${
-            activeFilter === "villages" ? "bg-amber-500 text-slate-950" : "text-slate-400 hover:text-white"
+            activeFilter === "villages" ? "bg-amber-500/90 text-slate-950" : "text-slate-300 hover:text-white hover:bg-white/10"
           }`}
         >
           <span>🏛️</span>
@@ -632,7 +721,7 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
         <button
           onClick={() => setActiveFilter("tourist")}
           className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 ${
-            activeFilter === "tourist" ? "bg-purple-500 text-white" : "text-slate-400 hover:text-white"
+            activeFilter === "tourist" ? "bg-purple-500/90 text-white" : "text-slate-300 hover:text-white hover:bg-white/10"
           }`}
         >
           <span>🛕</span>
@@ -642,7 +731,7 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
         <button
           onClick={() => setActiveFilter("treks_bridges")}
           className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 ${
-            activeFilter === "treks_bridges" ? "bg-sky-500 text-slate-950" : "text-slate-400 hover:text-white"
+            activeFilter === "treks_bridges" ? "bg-sky-500/90 text-slate-950" : "text-slate-300 hover:text-white hover:bg-white/10"
           }`}
         >
           <span>🥾</span>
@@ -652,7 +741,7 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
         <button
           onClick={() => setActiveFilter("shelters")}
           className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 ${
-            activeFilter === "shelters" ? "bg-emerald-500 text-slate-950" : "text-slate-400 hover:text-white"
+            activeFilter === "shelters" ? "bg-emerald-500/90 text-slate-950" : "text-slate-300 hover:text-white hover:bg-white/10"
           }`}
         >
           <Tent className="w-3 h-3 text-emerald-400" />
@@ -662,7 +751,7 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
         <button
           onClick={() => setActiveFilter("sensors")}
           className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 ${
-            activeFilter === "sensors" ? "bg-cyan-500 text-slate-950" : "text-slate-400 hover:text-white"
+            activeFilter === "sensors" ? "bg-cyan-500/90 text-slate-950" : "text-slate-300 hover:text-white hover:bg-white/10"
           }`}
         >
           <Waves className="w-3 h-3 text-cyan-400" />
@@ -672,11 +761,11 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
 
       {/* 3. Bottom Live Status Indicator & Click Instruction */}
       <div className="absolute bottom-4 left-4 z-10 flex items-center gap-3">
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-950/85 backdrop-blur-xl border border-teal-500/30 text-[11px] font-medium text-slate-200 shadow-xl">
+        <div className="flex items-center gap-2 px-3.5 py-2 rounded-full apple-glass-panel text-[11px] font-medium text-slate-200 shadow-xl">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" />
           <span className="font-bold text-teal-300">REAL-TIME INDIA NETWORK</span>
           <span className="text-slate-500">|</span>
-          <span className="text-slate-400 hidden sm:inline">Click anywhere on India to query real-time Open-Meteo & GloFAS telemetry</span>
+          <span className="text-slate-300 hidden sm:inline">Click anywhere on India to query real-time Open-Meteo & GloFAS telemetry</span>
         </div>
 
         {liveInspectLoading && (
