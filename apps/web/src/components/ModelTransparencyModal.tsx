@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { usePenelopeStore } from "@/lib/store";
 import { fetchMlMetrics, fetchTransparency } from "@/lib/api";
 import { Activity, X, ShieldAlert, BarChart3, Info, CheckCircle2 } from "lucide-react";
+import HindcastPanel from "./HindcastPanel";
 
 export default function ModelTransparencyModal() {
   const { isTransparencyModalOpen, setTransparencyModalOpen } = usePenelopeStore();
@@ -26,7 +27,6 @@ export default function ModelTransparencyModal() {
   const reports = metricsData?.reports || {};
   const lgbm = reports.lightgbm?.metrics;
   const rf = reports.baseline?.metrics;
-  const lstm = reports.lstm?.metrics;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
@@ -114,19 +114,14 @@ export default function ModelTransparencyModal() {
                     <td className="p-3 font-mono text-slate-400">{rf?.brier_score ?? "0.0092"}</td>
                   </tr>
 
-                  <tr>
-                    <td className="p-3 font-medium text-slate-300">Hydrology Sequence LSTM</td>
-                    <td className="p-3 font-mono font-bold text-slate-300">{lstm?.roc_auc ?? "0.7449"}</td>
-                    <td className="p-3 font-mono">{lstm?.pr_auc ?? "0.0993"}</td>
-                    <td className="p-3 font-mono">{lstm?.f1_score ?? "0.1102"}</td>
-                    <td className="p-3 font-mono">{lstm?.precision ?? "0.1050"}</td>
-                    <td className="p-3 font-mono">{lstm?.recall ?? "0.1160"}</td>
-                    <td className="p-3 font-mono text-slate-400">{lstm?.brier_score ?? "0.0820"}</td>
-                  </tr>
+
                 </tbody>
               </table>
             </div>
           </div>
+
+          {/* Hindcast Case Study */}
+          <HindcastPanel />
 
           {/* Top Feature Importance Breakdown */}
           {reports.lightgbm?.feature_importances && (
