@@ -74,6 +74,19 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
   const [liveInspectLoading, setLiveInspectLoading] = useState<boolean>(false);
   const [liveTelemetryPoint, setLiveTelemetryPoint] = useState<LiveHydrologyTelemetry | null>(null);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      (window as any).__openVillageDiagnostic = (villageId: string) => {
+        setSelectedVillageId(villageId);
+      };
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        delete (window as any).__openVillageDiagnostic;
+      }
+    };
+  }, [setSelectedVillageId]);
+
   // Initialize MapLibre with Pan-India Overview
   useEffect(() => {
     if (!mapContainerRef.current) return;
@@ -112,6 +125,7 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
       if (originalTarget && originalTarget.closest(".maplibregl-marker")) {
         return;
       }
+      setSelectedVillageId(null);
 
       const { lng, lat } = e.lngLat;
       // Restrict within Indian subcontinent coordinates approx [68, 6] to [97, 36]
@@ -513,7 +527,8 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
 
           <button
             id="btn-inspect-${p.id}"
-            class="w-full mt-1.5 py-2 px-3 rounded-xl bg-teal-500/20 hover:bg-teal-500/35 border border-teal-400/40 text-teal-200 text-xs font-bold transition shadow-md flex items-center justify-center gap-1.5"
+            onclick="window.__openVillageDiagnostic && window.__openVillageDiagnostic('${p.id}')"
+            class="w-full mt-1.5 py-2 px-3 rounded-xl bg-teal-500/20 hover:bg-teal-500/35 border border-teal-400/40 text-teal-200 text-xs font-bold transition shadow-md flex items-center justify-center gap-1.5 cursor-pointer"
           >
             <span>Open Diagnostic Profile</span>
             <span>→</span>
@@ -522,16 +537,20 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
       `);
 
       popup.on("open", () => {
-        const btn = document.getElementById(`btn-inspect-${p.id}`);
+        const popupEl = popup.getElement();
+        const btn = popupEl?.querySelector(`#btn-inspect-${p.id}`) || document.getElementById(`btn-inspect-${p.id}`);
         if (btn) {
-          btn.addEventListener("click", () => {
+          btn.addEventListener("click", (e) => {
+            e.stopPropagation();
             setSelectedVillageId(p.id);
           });
         }
       });
 
       el.addEventListener("click", () => {
-        setSelectedVillageId(p.id);
+        // Reset any previously open diagnostic profile when clicking a new landmark
+        // Only open the diagnostic box when "Open Diagnostic Profile" is clicked
+        setSelectedVillageId(null);
       });
 
       const marker = new maplibregl.Marker({ element: el })
