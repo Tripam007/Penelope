@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select, text
 
 from apps.api.database import get_db, active_db_url
-from apps.api.models import Village, Sensor, Shelter, SensorReading, Basin, GridCell
+from apps.api.models import Village, Sensor, Shelter, SensorReading, Basin, GridCell, Location
 from apps.api.geo_types import extract_lon_lat
 from apps.api.geospatial.risk_engine import (
     get_grid_risk_geojson,
