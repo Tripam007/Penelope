@@ -41,7 +41,10 @@ ENV/
 .coverage
 htmlcov/
 
-# Node / Next.js
+# Media & Videos
+*.mp4
+*.mov
+
 apps/web/node_modules/
 apps/web/.next/
 apps/web/out/

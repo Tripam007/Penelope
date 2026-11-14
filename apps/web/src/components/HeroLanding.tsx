@@ -12,6 +12,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import Link from "next/link";
+import FlowingGlassNav, { NavTabItem } from "@/components/FlowingGlassNav";
 
 interface HeroLandingProps {
   onExploreClick: () => void;
@@ -109,36 +110,22 @@ export default function HeroLanding({ onExploreClick, onOpenDemoVideo }: HeroLan
           </div>
         </div>
 
-        {/* Center Floating Capsule Nav (Apple visionOS Translucent Glass Pill) */}
-        <nav className="hidden md:flex items-center gap-7 px-7 py-2.5 rounded-full bg-slate-950/40 backdrop-blur-2xl border border-white/15 shadow-[0_8px_32px_rgba(0,0,0,0.45)] text-xs font-medium text-slate-300">
-          {[
+        {/* Center Floating Flowing Glass Capsule Nav */}
+        <FlowingGlassNav
+          tabs={[
             { id: "home", label: "Home" },
-            { id: "about", label: "About" },
-            { id: "features", label: "Features" },
-            { id: "alerts", label: "Live Alerts" },
+            { id: "about", label: "About", badge: "ML", badgeType: "ai" },
+            { id: "features", label: "Features", badge: "AI", badgeType: "ai" },
+            { id: "alerts", label: "Live Alerts", badge: "LIVE", badgeType: "live" },
             { id: "contact", label: "Contact" },
-          ].map((tab) => {
-            const isActive = activeNavTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  setActiveNavTab(tab.id);
-                  if (tab.id === "alerts" || tab.id === "features") onExploreClick();
-                  if (tab.id === "about") setTransparencyModalOpen(true);
-                }}
-                className={`relative transition-colors duration-200 ${
-                  isActive ? "text-white font-semibold" : "hover:text-white"
-                }`}
-              >
-                {tab.label}
-                {isActive && (
-                  <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-teal-400 shadow-[0_0_8px_#2dd4bf]" />
-                )}
-              </button>
-            );
-          })}
-        </nav>
+          ]}
+          activeId={activeNavTab}
+          onSelect={(tabId) => {
+            setActiveNavTab(tabId);
+            if (tabId === "alerts" || tabId === "features") onExploreClick();
+            if (tabId === "about") setTransparencyModalOpen(true);
+          }}
+        />
 
         {/* Top-Right: Live Status Glass Capsule & Sign In */}
         <div className="flex items-center gap-3">
