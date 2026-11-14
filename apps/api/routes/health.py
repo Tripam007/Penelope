@@ -1,14 +1,19 @@
 """
-PENELOPE Backend - Health & System Status Endpoint
-Reports database, scheduler, ML model status, and alert provider degradation flags.
+PENELOPE Backend - Health & Data Staleness Status Endpoint
+Reports system health, database connectivity, ML model availability,
+and /v1/health/data with last ingest timestamps per source and staleness flags.
 """
 
+from datetime import datetime
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from sqlalchemy import text
+from sqlalchemy import text, select, func
+
 from apps.api.config import settings
 from apps.api.database import get_db, active_db_url
 from apps.api.ingestion.scheduler import scheduler, ml_predictor
+from apps.api.ingestion.resilience import ingest_health
+from apps.api.models import GridCell, WeatherObs, RiverObs, SensorDevice, Region
 
 router = APIRouter(tags=["Health"])
 
@@ -50,3 +55,62 @@ def get_system_health(db: Session = Depends(get_db)):
         "official_disclaimer": "Advisory only. Experimental AI flash-flood prediction. Follow official IMD/CWC/NDMA warnings."
     }
 
+
+@router.get("/health/data")
+@router.get("/v1/health/data")
+def get_data_ingest_health(db: Session = Depends(get_db)):
+    """
+    Returns last successful ingest per source + staleness flags (Part 2 requirement).
+    """
+    now = datetime.utcnow()
+    summary = ingest_health.get_summary()
+
+    # Query DB row counts & latest timestamps
+    cell_count = db.execute(select(func.count(GridCell.id))).scalar() or 0
+    latest_weather = db.execute(select(func.max(WeatherObs.ts))).scalar()
+    weather_count = db.execute(select(func.count(WeatherObs.id))).scalar() or 0
+    latest_river = db.execute(select(func.max(RiverObs.ts))).scalar()
+    river_count = db.execute(select(func.count(RiverObs.id))).scalar() or 0
+    sensor_count = db.execute(select(func.count(SensorDevice.id))).scalar() or 0
+    region_count = db.execute(select(func.count(Region.id))).scalar() or 0
+
+    # Determine live staleness from DB timestamps if tracker was just initialized
+    if latest_weather:
+        weather_age_min = (now - latest_weather).total_seconds() / 60.0
+        summary["weather"]["last_success"] = latest_weather.isoformat() + "Z"
+        summary["weather"]["is_stale"] = weather_age_min > summary["weather"]["staleness_threshold_min"]
+        summary["weather"]["status"] = "stale" if summary["weather"]["is_stale"] else "fresh"
+        summary["weather"]["records_in_db"] = weather_count
+
+    if latest_river:
+        river_age_min = (now - latest_river).total_seconds() / 60.0
+        summary["glofas"]["last_success"] = latest_river.isoformat() + "Z"
+        summary["glofas"]["is_stale"] = river_age_min > summary["glofas"]["staleness_threshold_min"]
+        summary["glofas"]["status"] = "stale" if summary["glofas"]["is_stale"] else "fresh"
+        summary["glofas"]["records_in_db"] = river_count
+
+        summary["sensor"]["last_success"] = latest_river.isoformat() + "Z"
+        summary["sensor"]["is_stale"] = river_age_min > summary["sensor"]["staleness_threshold_min"]
+        summary["sensor"]["status"] = "stale" if summary["sensor"]["is_stale"] else "fresh"
+        summary["sensor"]["records_in_db"] = river_count
+
+    if cell_count > 0:
+        summary["terrain"]["status"] = "fresh"
+        summary["terrain"]["is_stale"] = False
+        summary["terrain"]["records_in_db"] = cell_count
+
+    all_fresh = not any(s.get("is_stale", True) for s in summary.values())
+
+    return {
+        "status": "healthy" if all_fresh else "operational",
+        "timestamp": now.isoformat() + "Z",
+        "tagline": "Data today. Safer tomorrows.",
+        "sources": summary,
+        "database_totals": {
+            "regions": region_count,
+            "grid_cells": cell_count,
+            "weather_observations": weather_count,
+            "river_observations": river_count,
+            "sensor_devices": sensor_count,
+        }
+    }

@@ -2,7 +2,7 @@
 # Tagline: "Data today. Safer tomorrows."
 # Pillars: Predict · Prepare · Protect
 
-.PHONY: help dev build up down restart logs test lint migrate seed clean
+.PHONY: help dev build up down restart logs test lint migrate seed ingest clean
 
 help:
 	@echo "Available commands:"
@@ -14,6 +14,7 @@ help:
 	@echo "  make test      - Run backend, frontend, and ML tests"
 	@echo "  make migrate   - Run Alembic database migrations"
 	@echo "  make seed      - Ingest real external data and seed 3 regions"
+	@echo "  make ingest    - Run Part 2 terrain, weather, river, and sensor pipeline"
 	@echo "  make lint      - Lint code across backend and frontend"
 	@echo "  make clean     - Remove cache and temporary artifacts"
 
@@ -40,6 +41,9 @@ migrate:
 
 seed:
 	python -m apps.api.seed
+
+ingest:
+	python -m apps.api.ingestion.run_ingest
 
 test:
 	python -m pytest apps/api/tests ml/tests -v
