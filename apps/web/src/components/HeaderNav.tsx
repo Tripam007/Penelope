@@ -2,13 +2,15 @@
 
 import React from "react";
 import { usePenelopeStore } from "@/lib/store";
-import { Shield, Waves, Activity, AlertTriangle, Radio, Globe, Palette } from "lucide-react";
+import { Shield, Waves, Activity, AlertTriangle, Radio, Globe, Palette, User, UserCheck } from "lucide-react";
 import Link from "next/link";
 
 export default function HeaderNav() {
   const {
     language,
     setLanguage,
+    currentUser,
+    setAuthModalOpen,
     setAuthorityModalOpen,
     setTransparencyModalOpen,
     setSensorPanelOpen,
@@ -79,6 +81,28 @@ export default function HeaderNav() {
           <Palette className="w-3.5 h-3.5 text-teal-400" />
           <span className="hidden lg:inline">Design System</span>
         </Link>
+
+        {/* Firebase Authentication Button */}
+        {currentUser ? (
+          <button
+            onClick={() => setAuthModalOpen(true)}
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-teal-500/10 hover:bg-teal-500/20 text-teal-300 border border-teal-500/30 flex items-center gap-1.5 transition"
+          >
+            <UserCheck className="w-3.5 h-3.5 text-teal-400" />
+            <span className="max-w-[80px] sm:max-w-[120px] truncate">{currentUser.displayName}</span>
+            <span className="hidden sm:inline text-[9px] uppercase font-bold px-1.5 py-0.2 rounded bg-teal-500/20 text-teal-300">
+              {currentUser.role}
+            </span>
+          </button>
+        ) : (
+          <button
+            onClick={() => setAuthModalOpen(true)}
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-teal-500/20 to-cyan-500/20 hover:from-teal-500/30 hover:to-cyan-500/30 text-teal-200 border border-teal-400/40 flex items-center gap-1.5 transition"
+          >
+            <User className="w-3.5 h-3.5 text-teal-400" />
+            <span className="hidden sm:inline">Sign In</span>
+          </button>
+        )}
 
         {/* Language Switcher */}
         <div className="flex items-center p-0.5 rounded-lg bg-slate-900 border border-slate-800 text-xs">

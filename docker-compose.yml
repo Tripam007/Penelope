@@ -59,6 +59,38 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/healthz')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ./apps/api:/app/apps/api
+      - ./ml/models:/app/ml/models
+    networks:
+      - penelope_net
+
+  worker:
+    build:
+      context: .
+      dockerfile: infra/docker/Dockerfile.api
+    container_name: penelope_worker
+    restart: always
+    command: python -m apps.api.worker
+    environment:
+      - ENVIRONMENT=production
+      - DATABASE_URL=postgresql+asyncpg://penelope:penelope_dev_secret@db:5432/penelope_db
+      - DATABASE_SYNC_URL=postgresql://penelope:penelope_dev_secret@db:5432/penelope_db
+      - REDIS_URL=redis://redis:6379/0
+      - SIMULATE_SENSORS=True
+      - MODEL_DIR=/app/ml/models
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_started
     volumes:
       - ./apps/api:/app/apps/api
       - ./ml/models:/app/ml/models
@@ -79,6 +111,11 @@ services:
       - "3000:3000"
     depends_on:
       - api
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000', (r) => { if (r.statusCode >= 200 && r.statusCode < 400) process.exit(0); else process.exit(1); })"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes:
       - ./apps/web:/app
       - /app/node_modules
@@ -107,4 +144,3 @@ volumes:
 networks:
   penelope_net:
     driver: bridge
-

@@ -98,6 +98,33 @@ cd apps/web && pnpm build
 
 ---
 
+## 👥 Demo Accounts & RBAC Roles (Part 1)
+
+PENELOPE implements strict Role-Based Access Control (RBAC) with JWT access tokens (15m expiry) and httpOnly refresh cookies (7d expiry).
+
+All demo accounts use the standard password: `Penelope@2026!`
+
+| Role | Email | Name | Organization / Scope | Permissions |
+|---|---|---|---|---|
+| **Citizen** | `citizen@penelope.org` | Aarav Sharma | Chamoli Resident Union | Public risk maps, village status, evacuation routes, personal alerts |
+| **Tourist** | `tourist@penelope.org` | Elena Rostova | Himalayan Trekking Expedition | Route safety, weather telemetry, shelter guidance |
+| **Authority** | `authority@penelope.org` | Dr. Rajeshwar Pant | Uttarakhand SDMA | Emergency broadcast command, risk override, all telemetry |
+| **Responder** | `responder@penelope.org` | Cdr. Vikram Rathore | NDRF 8th Battalion | Incident dispatch, shelter capacity updates, sensor status |
+| **NGO** | `ngo@penelope.org` | Priyanka Nair | SEEDS Disaster Relief | Relief camp logistics, vulnerable population mapping |
+| **Admin** | `admin@penelope.org` | System Admin | PENELOPE Operations | Full platform control, sensor registration, user management |
+
+---
+
+## 🗺️ Seeded Catchment Regions (Part 1)
+
+Every demo region includes full MultiPolygon and Centroid PostGIS geometries and **$\ge 200$ real locations** (villages, towns, tourist spots, treks, bridges, shelters):
+
+1. **Uttarakhand-Chamoli (226 locations):** Alaknanda and Rishi Ganga catchments (Joshimath, Raini, Tapovan, Mana, Helang, Badrinath, Valley of Flowers).
+2. **Himachal-Kullu (202 locations):** Upper Beas, Parvati, and Tirthan catchments (Manali, Kasol, Manikaran, Tosh, Malana, Jibhi, Banjar).
+3. **Kerala-Wayanad (202 locations):** Western Ghats Kabini and Chaliyar basins (Meppadi, Chooralmala, Mundakkai, Vythiri, Kalpetta, Attamala).
+
+---
+
 ## 📋 Hard Rules Compliance Checklist
 
 - [x] **Rule 1: End-to-end functionality** — 0 stubs, 0 TODOs, 0 mock endpoints. Real calculations across all layers.

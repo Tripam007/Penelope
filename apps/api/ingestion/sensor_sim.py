@@ -53,10 +53,14 @@ class SensorSimulatorDaemon:
             discharge = max(5.0, round(water_level * 12.5 + random.uniform(0, 5), 1))
 
             reading = SensorReading(
+                station_or_cell_id=sensor.sensor_code or sensor.id,
                 sensor_id=sensor.id,
+                ts=now,
                 timestamp=now,
+                level_m=water_level,
                 water_level_m=water_level,
                 rate_of_rise_mh=round(rate_of_rise, 3),
+                discharge_m3s=discharge,
                 discharge_rate_m3s=discharge,
                 source="simulated"  # Strictly marked simulated per Hard Rule 3
             )

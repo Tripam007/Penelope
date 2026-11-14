@@ -26,11 +26,16 @@ def ingest_sensor_reading(payload: SensorIngestRequest, db: Session = Depends(ge
     if not sensor:
         raise HTTPException(status_code=404, detail=f"Sensor '{payload.sensor_code}' not registered.")
 
+    reading_ts = payload.timestamp or datetime.utcnow()
     reading = SensorReading(
+        station_or_cell_id=payload.sensor_code,
         sensor_id=sensor.id,
-        timestamp=payload.timestamp or datetime.utcnow(),
+        ts=reading_ts,
+        timestamp=reading_ts,
+        level_m=payload.water_level_m,
         water_level_m=payload.water_level_m,
         rate_of_rise_mh=payload.rate_of_rise_mh or 0.0,
+        discharge_m3s=payload.discharge_rate_m3s or 0.0,
         discharge_rate_m3s=payload.discharge_rate_m3s or 0.0,
         source=payload.source  # "live" or "simulated"
     )

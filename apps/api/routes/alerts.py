@@ -9,11 +9,54 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 
 from apps.api.database import get_db
-from apps.api.models import Alert, AlertDelivery, Basin, Village
+from apps.api.models import Alert, AlertDelivery, Basin, Village, Region, User
 from apps.api.schemas import AlertResponse, ManualAlertTriggerRequest
 from apps.api.alerts.dispatcher import alert_dispatcher
+from apps.api.auth.dependencies import require_role
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/alerts", tags=["Alerts"])
+
+
+class AlertDispatchRequest(BaseModel):
+    region_id: Optional[str] = None
+    severity: str = "High"
+    title: str
+    message: str
+    channels: List[str] = ["SMS", "Push"]
+
+
+@router.post("/dispatch")
+def dispatch_authority_alert(
+    payload: AlertDispatchRequest,
+    current_user: User = Depends(require_role("authority", "responder", "admin")),
+    db: Session = Depends(get_db)
+):
+    """
+    RBAC Protected: Authority/Responder/Admin only endpoint to dispatch flood warnings.
+    """
+    # Pick first region if not specified
+    region = None
+    if payload.region_id:
+        region = db.execute(select(Region).where(Region.id == payload.region_id)).scalars().first()
+    if not region:
+        region = db.execute(select(Region)).scalars().first()
+
+    region_id = region.id if region else "default-region"
+
+    alert = Alert(
+        region_id=region_id,
+        severity=payload.severity,
+        message_i18n={"en": payload.message, "hi": payload.message},
+        title=payload.title,
+        message=payload.message,
+        issued_by=current_user.email,
+        status="active"
+    )
+    db.add(alert)
+    db.commit()
+    db.refresh(alert)
+    return {"status": "dispatched", "alert_id": alert.id, "issued_by": current_user.email}
 
 
 @router.get("", response_model=List[AlertResponse])
@@ -55,6 +98,7 @@ def trigger_manual_alert(payload: ManualAlertTriggerRequest, db: Session = Depen
         raise HTTPException(status_code=404, detail="Basin not found")
 
     alert = Alert(
+        region_id=payload.basin_id,
         basin_id=payload.basin_id,
         village_id=payload.village_id,
         severity=payload.severity,
