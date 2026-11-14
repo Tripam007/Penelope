@@ -1,3 +1,4 @@
+@import "maplibre-gl/dist/maplibre-gl.css";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -105,11 +106,14 @@ body {
 /* =========================================================================
    MapLibre GL JS Popup Overrides - Pure Frosted Glass (No White Box / Tip)
    ========================================================================= */
-.maplibregl-popup {
+.maplibregl-popup,
+.frosted-glass-maplibre-popup {
   z-index: 50 !important;
 }
 
-.maplibregl-popup-content {
+.maplibregl-popup-content,
+.frosted-glass-maplibre-popup .maplibregl-popup-content,
+div.maplibregl-popup-content {
   background: transparent !important;
   background-color: transparent !important;
   box-shadow: none !important;
@@ -118,14 +122,19 @@ body {
   border: none !important;
 }
 
-.maplibregl-popup-tip {
+.maplibregl-popup-tip,
+.frosted-glass-maplibre-popup .maplibregl-popup-tip,
+div.maplibregl-popup-tip {
   display: none !important;
   border: none !important;
   width: 0 !important;
   height: 0 !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
 }
 
-.maplibregl-popup-close-button {
+.maplibregl-popup-close-button,
+.frosted-glass-maplibre-popup .maplibregl-popup-close-button {
   color: #94a3b8 !important;
   font-size: 16px !important;
   padding: 4px 8px !important;
@@ -137,7 +146,8 @@ body {
   outline: none !important;
 }
 
-.maplibregl-popup-close-button:hover {
+.maplibregl-popup-close-button:hover,
+.frosted-glass-maplibre-popup .maplibregl-popup-close-button:hover {
   background: rgba(255, 255, 255, 0.15) !important;
   color: #ffffff !important;
 }

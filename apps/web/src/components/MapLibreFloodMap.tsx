@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import maplibregl, { Map as MapLibreMap, Marker, Popup } from "maplibre-gl";
-import "maplibre-gl/dist/maplibre-gl.css";
 import { usePenelopeStore } from "@/lib/store";
 import { getRiskColorClass } from "@/lib/utils";
 import { INDIA_REGIONS, IndiaRegionView } from "@/lib/mockData";
@@ -29,6 +28,38 @@ interface MapProps {
 }
 
 type LayerFilter = "all" | "villages" | "tourist" | "treks_bridges" | "shelters" | "sensors" | "high_risk";
+
+function createFrostedPopup(maxWidth: string = "340px"): Popup {
+  const popup = new maplibregl.Popup({
+    offset: 15,
+    maxWidth,
+    className: "frosted-glass-maplibre-popup",
+  });
+
+  popup.on("open", () => {
+    const el = popup.getElement();
+    if (el) {
+      const content = el.querySelector(".maplibregl-popup-content") as HTMLElement | null;
+      if (content) {
+        content.style.setProperty("background", "transparent", "important");
+        content.style.setProperty("background-color", "transparent", "important");
+        content.style.setProperty("box-shadow", "none", "important");
+        content.style.setProperty("padding", "0", "important");
+        content.style.setProperty("border", "none", "important");
+      }
+      const tip = el.querySelector(".maplibregl-popup-tip") as HTMLElement | null;
+      if (tip) {
+        tip.style.setProperty("display", "none", "important");
+        tip.style.setProperty("width", "0", "important");
+        tip.style.setProperty("height", "0", "important");
+        tip.style.setProperty("border", "none", "important");
+        tip.style.setProperty("visibility", "hidden", "important");
+      }
+    }
+  });
+
+  return popup;
+}
 
 export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -110,7 +141,7 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
 
         const riskColor = getRiskColorClass(liveData.risk_level);
 
-        const popup = new maplibregl.Popup({ offset: 15, maxWidth: "340px" }).setHTML(`
+        const popup = createFrostedPopup("340px").setHTML(`
           <div class="p-3.5 text-slate-100 bg-slate-950/80 backdrop-blur-2xl rounded-2xl border border-teal-500/40 font-sans shadow-[0_20px_50px_rgba(0,0,0,0.85)] space-y-2.5">
             <div class="flex items-start justify-between border-b border-white/10 pb-2">
               <div>
@@ -284,7 +315,7 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
           </div>
         `;
 
-        const popup = new maplibregl.Popup({ offset: 15, maxWidth: "320px" }).setHTML(`
+        const popup = createFrostedPopup("320px").setHTML(`
           <div class="p-3.5 text-slate-100 bg-slate-950/80 backdrop-blur-2xl rounded-2xl border border-cyan-500/40 font-sans shadow-[0_20px_50px_rgba(0,0,0,0.85)] space-y-2.5">
             <div class="flex items-center gap-2 border-b border-white/10 pb-2 mb-1">
               <span class="text-sm">📡</span>
@@ -338,7 +369,7 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
           </div>
         `;
 
-        const popup = new maplibregl.Popup({ offset: 15, maxWidth: "340px" }).setHTML(`
+        const popup = createFrostedPopup("340px").setHTML(`
           <div class="p-3.5 text-slate-100 bg-slate-950/80 backdrop-blur-2xl rounded-2xl border border-emerald-500/40 font-sans shadow-[0_20px_50px_rgba(0,0,0,0.85)] space-y-2.5">
             <div class="flex items-center gap-2 border-b border-white/10 pb-2 mb-1">
               <span class="text-sm">⛺</span>
@@ -406,7 +437,7 @@ export default function MapLibreFloodMap({ geoJsonData }: MapProps) {
         </div>
       `;
 
-      const popup = new maplibregl.Popup({ offset: 15, maxWidth: "340px" }).setHTML(`
+      const popup = createFrostedPopup("340px").setHTML(`
         <div class="p-3.5 text-slate-100 bg-slate-950/80 backdrop-blur-2xl rounded-2xl border border-white/15 font-sans shadow-[0_20px_50px_rgba(0,0,0,0.85)] space-y-2.5">
           <div class="flex items-start justify-between border-b border-white/10 pb-2">
             <div>
