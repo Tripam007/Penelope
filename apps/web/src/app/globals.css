@@ -151,6 +151,31 @@ div.maplibregl-popup-tip {
   background: rgba(255, 255, 255, 0.15) !important;
   color: #ffffff !important;
 }
+
+/* =========================================================================
+   Apple visionOS / macOS Frosted Glass Box Styles
+   ========================================================================= */
+.apple-glass-panel {
+  background: rgba(10, 16, 32, 0.75) !important;
+  backdrop-filter: blur(28px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  box-shadow: 
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 24px 60px -15px rgba(0, 0, 0, 0.85) !important;
+}
+
+.apple-glass-card {
+  background: rgba(255, 255, 255, 0.045) !important;
+  backdrop-filter: blur(16px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(160%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.09) !important;
+}
+
+.apple-glass-tile {
+  background: rgba(0, 0, 0, 0.35) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }

@@ -32,11 +32,11 @@ export default function SensorMonitorPanel() {
   if (!isSensorPanelOpen) return null;
 
   return (
-    <div className="absolute top-20 left-4 z-20 w-full max-w-md bg-slate-950/95 backdrop-blur-xl border border-slate-800 rounded-2xl shadow-2xl overflow-hidden transition-all duration-300">
+    <div className="absolute top-20 left-4 z-20 w-full max-w-md apple-glass-panel rounded-2xl shadow-2xl overflow-hidden transition-all duration-300">
       {/* Header */}
-      <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+      <div className="p-4 border-b border-white/10 bg-white/[0.02] flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+          <div className="p-2 rounded-xl bg-cyan-500/15 text-cyan-400 border border-cyan-500/30">
             <Waves className="w-5 h-5" />
           </div>
           <div>
@@ -47,14 +47,14 @@ export default function SensorMonitorPanel() {
         <div className="flex items-center gap-1">
           <button
             onClick={() => refetch()}
-            className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition"
+            className="p-1.5 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition"
             title="Refresh Readings"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
           <button
             onClick={() => setSensorPanelOpen(false)}
-            className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition"
+            className="p-1.5 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -81,10 +81,10 @@ export default function SensorMonitorPanel() {
                 key={sensor.id}
                 className={`p-3.5 rounded-xl border transition ${
                   isCritical
-                    ? "bg-red-950/20 border-red-500/50"
+                    ? "bg-red-950/30 border-red-500/50 backdrop-blur-md"
                     : isWarning
-                    ? "bg-amber-950/20 border-amber-500/50"
-                    : "bg-slate-900/60 border-slate-800"
+                    ? "bg-amber-950/30 border-amber-500/50 backdrop-blur-md"
+                    : "apple-glass-card"
                 }`}
               >
                 <div className="flex items-start justify-between">

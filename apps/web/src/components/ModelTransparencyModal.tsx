@@ -29,12 +29,12 @@ export default function ModelTransparencyModal() {
   const lstm = reports.lstm?.metrics;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-      <div className="w-full max-w-3xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xl animate-in fade-in duration-200">
+      <div className="w-full max-w-3xl apple-glass-panel rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
+        <div className="p-4.5 border-b border-white/10 bg-white/[0.02] flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-400">
+            <div className="p-2 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-400">
               <Activity className="w-5 h-5" />
             </div>
             <div>
@@ -44,7 +44,7 @@ export default function ModelTransparencyModal() {
           </div>
           <button
             onClick={() => setTransparencyModalOpen(false)}
-            className="p-1.5 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white transition"
+            className="p-1.5 rounded-full hover:bg-white/10 text-slate-400 hover:text-white transition"
           >
             <X className="w-5 h-5" />
           </button>
