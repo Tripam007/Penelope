@@ -5,7 +5,7 @@ PENELOPE Backend - ML Insights, Explainability & Transparency (Hard Rule 4)
 import os
 import json
 from typing import Dict, Any
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from apps.api.config import settings
 from apps.api.ingestion.scheduler import ml_predictor
 
@@ -66,4 +66,20 @@ def get_model_transparency_statement():
             "sequence": "2-layer PyTorch/NumPy Hydrological Sequence LSTM (24-hour temporal rolling context)"
         }
     }
+
+
+@router.get("/hindcast")
+def get_hindcast_results():
+    """
+    Returns historical hindcast and negative control evaluation metrics.
+    """
+    path = os.path.join(settings.MODEL_DIR, "hindcast_results.json")
+    if not os.path.exists(path):
+        raise HTTPException(
+            status_code=404,
+            detail="Hindcast results not generated yet. Run python -m ml.hindcast."
+        )
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
 

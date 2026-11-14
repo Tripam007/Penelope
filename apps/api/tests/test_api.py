@@ -151,3 +151,11 @@ def test_on_demand_prediction(client):
     assert "risk_level" in data
     assert "horizons" in data
     assert len(data["key_factors"]) > 0
+
+
+def test_ml_hindcast_results(client):
+    res = client.get("/api/v1/ml/hindcast")
+    assert res.status_code == 200
+    data = res.json()
+    assert "limitations" in data
+
