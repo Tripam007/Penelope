@@ -6,6 +6,59 @@ export async function fetchMapGeoJSON() {
   return res.json();
 }
 
+export async function fetchRiskGeoJSON(bbox?: string, horizon: string = "3h") {
+  const query = new URLSearchParams();
+  if (bbox) query.set("bbox", bbox);
+  if (horizon) query.set("horizon", horizon);
+  const res = await fetch(`${API_BASE}/api/v1/map/risk.geojson?${query.toString()}`, { cache: "no-store" });
+  if (!res.ok) throw new Error("Failed to fetch risk GeoJSON");
+  return res.json();
+}
+
+export async function fetchMapLayers() {
+  const res = await fetch(`${API_BASE}/api/v1/map/layers`, { cache: "no-store" });
+  if (!res.ok) throw new Error("Failed to fetch layers");
+  return res.json();
+}
+
+export async function fetchLayerData(layerName: string) {
+  const res = await fetch(`${API_BASE}/api/v1/map/layers/${layerName}`, { cache: "no-store" });
+  if (!res.ok) throw new Error(`Failed to fetch layer ${layerName}`);
+  return res.json();
+}
+
+export async function fetchSafeRoute(fromLocation: [number, number], toLocation: [number, number], regionId?: string) {
+  const res = await fetch(`${API_BASE}/api/v1/routing/safe`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: fromLocation,
+      to: toLocation,
+      region_id: regionId
+    })
+  });
+  if (!res.ok) throw new Error("Failed to calculate safe route");
+  return res.json();
+}
+
+export async function fetchTouristAdvice(lat: number, lng: number, lang: string = "en") {
+  const res = await fetch(`${API_BASE}/api/v1/tourist/advice?lat=${lat}&lng=${lng}&lang=${lang}`, { cache: "no-store" });
+  if (!res.ok) throw new Error("Failed to fetch tourist advice");
+  return res.json();
+}
+
+export async function fetchRegions() {
+  const res = await fetch(`${API_BASE}/api/v1/regions`, { cache: "no-store" });
+  if (!res.ok) throw new Error("Failed to fetch regions");
+  return res.json();
+}
+
+export async function fetchRegionSummary(regionId: string) {
+  const res = await fetch(`${API_BASE}/api/v1/regions/${regionId}/summary`, { cache: "no-store" });
+  if (!res.ok) throw new Error("Failed to fetch region summary");
+  return res.json();
+}
+
 export async function fetchVillages() {
   const res = await fetch(`${API_BASE}/api/v1/villages`, { cache: "no-store" });
   if (!res.ok) throw new Error("Failed to fetch villages");
@@ -80,4 +133,3 @@ export async function triggerSimulatedSurge(sensorCode: string) {
   if (!res.ok) throw new Error("Failed to trigger surge");
   return res.json();
 }
-

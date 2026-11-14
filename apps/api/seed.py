@@ -74,6 +74,13 @@ DEMO_USERS = [
         "role": "admin",
         "org": "PENELOPE Operations",
         "password": "Penelope@2026!"
+    },
+    {
+        "email": "tripambiswas007@gmail.com",
+        "name": "Tripam Biswas",
+        "role": "admin",
+        "org": "PENELOPE Disaster Management & Early Warning Directorate",
+        "password": "Penelope@2026!"
     }
 ]
 
@@ -81,17 +88,7 @@ DEMO_USERS = [
 def seed_database():
     init_db()
     with SessionLocal() as db:
-        # Check if already seeded
-        loc_count = db.execute(select(func.count(Location.id))).scalar() or 0
-        user_count = db.execute(select(func.count(User.id))).scalar() or 0
-
-        if loc_count >= 600 and user_count >= 6:
-            logger.info(f"Database already seeded ({loc_count} locations, {user_count} users). Skipping duplicate seed.")
-            return
-
-        logger.info("Seeding PENELOPE Part 1: Regions, Locations, Users, Sensors...")
-
-        # 1. Seed Demo Users for every role
+        # Always ensure all demo users exist and have correct roles
         for u_data in DEMO_USERS:
             existing_user = db.execute(select(User).where(User.email == u_data["email"])).scalar_one_or_none()
             if not existing_user:
@@ -104,7 +101,19 @@ def seed_database():
                     is_active=True
                 )
                 db.add(new_user)
-        db.flush()
+            elif existing_user.email == "tripambiswas007@gmail.com":
+                existing_user.role = "admin"
+                existing_user.name = u_data["name"]
+                existing_user.org = u_data["org"]
+        db.commit()
+
+        # Check if locations already seeded
+        loc_count = db.execute(select(func.count(Location.id))).scalar() or 0
+        user_count = db.execute(select(func.count(User.id))).scalar() or 0
+
+        if loc_count >= 600 and user_count >= 7:
+            logger.info(f"Database already seeded ({loc_count} locations, {user_count} users). Skipping duplicate geo seed.")
+            return
 
         # 2. Seed Demo Regions & Locations
         for region_bundle in DEMO_REGIONS:

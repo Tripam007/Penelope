@@ -287,3 +287,4 @@ async def test_live_open_meteo_smoke():
     elevations = await terrain_pipeline.fetch_elevations_batch([(30.55, 79.55)])
     assert len(elevations) == 1
     assert elevations[0] > 500.0  # Himalayan elevation
+

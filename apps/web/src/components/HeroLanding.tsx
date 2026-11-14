@@ -142,6 +142,15 @@ export default function HeroLanding({ onExploreClick, onOpenDemoVideo }: HeroLan
 
         {/* Top-Right: Live Status Glass Capsule & Sign In */}
         <div className="flex items-center gap-3">
+          {/* Dedicated Admin Portal Link */}
+          <Link
+            href="/admin"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-gradient-to-r from-red-500/20 to-amber-500/20 hover:from-red-500/30 hover:to-amber-500/30 backdrop-blur-2xl border border-amber-500/40 text-xs font-bold text-amber-300 transition shadow-[0_8px_24px_rgba(245,158,11,0.2)]"
+          >
+            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+            <span>Admin Portal</span>
+          </Link>
+
           {/* Live Status Pill with Bell */}
           <button
             onClick={onExploreClick}

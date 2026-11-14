@@ -82,6 +82,15 @@ export default function HeaderNav() {
           <span className="hidden lg:inline">Design System</span>
         </Link>
 
+        {/* Dedicated Admin Portal Link for Tripam Biswas / Admin */}
+        <Link
+          href="/admin"
+          className="px-3 py-1.5 rounded-lg text-xs font-bold bg-gradient-to-r from-red-500/20 via-amber-500/20 to-teal-500/20 hover:from-red-500/30 hover:to-teal-500/30 text-amber-300 border border-amber-500/40 flex items-center gap-1.5 transition shadow-sm"
+        >
+          <Shield className="w-3.5 h-3.5 text-amber-400" />
+          <span>Admin Portal</span>
+        </Link>
+
         {/* Firebase Authentication Button */}
         {currentUser ? (
           <button

@@ -22,6 +22,11 @@ from apps.api.routes.sensors import router as sensors_router
 from apps.api.routes.alerts import router as alerts_router
 from apps.api.routes.ml_insights import router as ml_router
 from apps.api.routes.websockets import router as ws_router
+from apps.api.routes.admin import router as admin_router
+from apps.api.routes.routing import router as routing_router
+from apps.api.routes.tourist import router as tourist_router
+from apps.api.routes.regions import router as regions_router
+from apps.api.routes.stream import router as stream_router
 from apps.api.auth.router import router as auth_router
 from apps.api.middleware import RequestIdMiddleware
 
@@ -61,16 +66,31 @@ app.add_middleware(
 )
 app.add_middleware(RequestIdMiddleware)
 
-# Include API routers under /api/v1
-app.include_router(auth_router, prefix=settings.API_V1_PREFIX)
-app.include_router(health_router, prefix=settings.API_V1_PREFIX)
-app.include_router(map_router, prefix=settings.API_V1_PREFIX)
-app.include_router(villages_router, prefix=settings.API_V1_PREFIX)
-app.include_router(sensors_router, prefix=settings.API_V1_PREFIX)
-app.include_router(alerts_router, prefix=settings.API_V1_PREFIX)
-app.include_router(ml_router, prefix=settings.API_V1_PREFIX)
-app.include_router(ws_router, prefix=settings.API_V1_PREFIX)
+# All standard API routers
+api_routers = [
+    auth_router,
+    health_router,
+    map_router,
+    villages_router,
+    sensors_router,
+    alerts_router,
+    ml_router,
+    ws_router,
+    admin_router,
+    routing_router,
+    tourist_router,
+    regions_router,
+    stream_router,
+]
 
+# Include routers under both /api/v1 and /v1 for full client & spec compatibility
+for r in api_routers:
+    app.include_router(r, prefix=settings.API_V1_PREFIX)
+    if settings.API_V1_PREFIX != "/v1":
+        app.include_router(r, prefix="/v1")
+
+# Legacy un-prefixed fallbacks
+app.include_router(admin_router)
 app.include_router(health_router)
 
 

@@ -104,3 +104,4 @@ def run_sensor_simulation(num_steps: int = 1):
 if __name__ == "__main__":
     count = run_sensor_simulation(num_steps=3)
     print(f"Generated {count} simulated sensor telemetry records.")
+

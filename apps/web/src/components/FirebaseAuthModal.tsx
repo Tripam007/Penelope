@@ -542,6 +542,14 @@ export default function FirebaseAuthModal() {
 
             {[
               {
+                role: "admin",
+                name: "Tripam Biswas",
+                email: "tripambiswas007@gmail.com",
+                org: "PENELOPE Directorate (Super Admin)",
+                badge: "SUPER ADMIN",
+                isHighlighted: true,
+              },
+              {
                 role: "authority",
                 name: "Dr. Rajeshwar Pant",
                 email: "authority@penelope.org",
@@ -589,17 +597,25 @@ export default function FirebaseAuthModal() {
                 type="button"
                 onClick={() => handleDemoLogin(persona.email, persona.name)}
                 disabled={loading}
-                className="w-full p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-left flex items-center justify-between transition group"
+                className={`w-full p-2.5 rounded-xl text-left flex items-center justify-between transition group ${
+                  persona.isHighlighted
+                    ? "bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/40 shadow-sm"
+                    : "bg-white/5 hover:bg-white/10 border border-white/10"
+                }`}
               >
                 <div>
-                  <div className="text-xs font-bold text-white group-hover:text-teal-300 transition">
+                  <div className={`text-xs font-bold transition ${persona.isHighlighted ? "text-amber-300" : "text-white group-hover:text-teal-300"}`}>
                     {persona.name}
                   </div>
                   <div className="text-[11px] text-slate-400">
                     {persona.email} • {persona.org}
                   </div>
                 </div>
-                <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-teal-500/10 text-teal-400 border border-teal-500/20">
+                <span className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full ${
+                  persona.isHighlighted
+                    ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
+                    : "bg-teal-500/10 text-teal-400 border border-teal-500/20"
+                }`}>
                   {persona.badge}
                 </span>
               </button>

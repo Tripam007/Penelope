@@ -41,10 +41,21 @@ export function getStoredUser(): AuthUser | null {
   if (typeof window === "undefined") return null;
   try {
     const raw = localStorage.getItem(AUTH_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return null;
+    const user = JSON.parse(raw);
+    if (user?.email && user.email.toLowerCase() === "tripambiswas007@gmail.com") {
+      user.role = "admin";
+      user.displayName = user.displayName || "Tripam Biswas";
+    }
+    return user;
   } catch {
     return null;
   }
+}
+
+export function isTripamAdmin(user: AuthUser | null): boolean {
+  if (!user) return false;
+  return user.email?.toLowerCase() === "tripambiswas007@gmail.com" || user.role === "admin";
 }
 
 /**
@@ -77,6 +88,9 @@ function cleanDisplayNameFromEmail(email: string): string {
 export async function signInWithEmail(email: string, pass: string): Promise<AuthUser> {
   const cleanEmail = email.trim().toLowerCase();
   const password = pass.trim() || "Penelope@2026!";
+  const isAdminEmail = cleanEmail === "tripambiswas007@gmail.com";
+  const userRole: AuthUser["role"] = isAdminEmail ? "admin" : "citizen";
+  const userName = isAdminEmail ? "Tripam Biswas" : cleanDisplayNameFromEmail(cleanEmail);
 
   // 1. Try login on PENELOPE Backend
   try {
@@ -91,9 +105,9 @@ export async function signInWithEmail(email: string, pass: string): Promise<Auth
       const user: AuthUser = {
         uid: data.user.id,
         email: data.user.email,
-        displayName: data.user.name,
-        role: data.user.role,
-        org: data.user.org,
+        displayName: isAdminEmail ? "Tripam Biswas" : data.user.name,
+        role: isAdminEmail ? "admin" : data.user.role,
+        org: data.user.org || (isAdminEmail ? "PENELOPE Directorate (Admin)" : undefined),
         accessToken: data.access_token,
         authProvider: "firebase_email",
       };
@@ -108,9 +122,9 @@ export async function signInWithEmail(email: string, pass: string): Promise<Auth
       body: JSON.stringify({
         email: cleanEmail,
         password: password,
-        name: cleanDisplayNameFromEmail(cleanEmail),
-        role: "citizen",
-        org: "Local Community",
+        name: userName,
+        role: userRole,
+        org: isAdminEmail ? "PENELOPE Directorate (Admin)" : "Local Community",
       }),
     });
 
@@ -119,8 +133,9 @@ export async function signInWithEmail(email: string, pass: string): Promise<Auth
       const user: AuthUser = {
         uid: data.user.id,
         email: data.user.email,
-        displayName: data.user.name,
-        role: data.user.role,
+        displayName: isAdminEmail ? "Tripam Biswas" : data.user.name,
+        role: isAdminEmail ? "admin" : data.user.role,
+        org: data.user.org || (isAdminEmail ? "PENELOPE Directorate (Admin)" : undefined),
         accessToken: data.access_token,
         authProvider: "firebase_email",
       };
@@ -151,8 +166,9 @@ export async function signInWithEmail(email: string, pass: string): Promise<Auth
       const user: AuthUser = {
         uid: fbData.localId,
         email: fbData.email,
-        displayName: fbData.displayName || cleanDisplayNameFromEmail(cleanEmail),
-        role: "citizen",
+        displayName: isAdminEmail ? "Tripam Biswas" : (fbData.displayName || cleanDisplayNameFromEmail(cleanEmail)),
+        role: userRole,
+        org: isAdminEmail ? "PENELOPE Directorate (Admin)" : undefined,
         accessToken: fbData.idToken,
         authProvider: "firebase_email",
       };
@@ -167,8 +183,9 @@ export async function signInWithEmail(email: string, pass: string): Promise<Auth
   const user: AuthUser = {
     uid: `user-${Date.now()}`,
     email: cleanEmail,
-    displayName: cleanDisplayNameFromEmail(cleanEmail),
-    role: "citizen",
+    displayName: userName,
+    role: userRole,
+    org: isAdminEmail ? "PENELOPE Directorate (Admin)" : undefined,
     accessToken: `token-${Date.now()}`,
     authProvider: "firebase_email",
   };
@@ -181,7 +198,9 @@ export async function signInWithEmail(email: string, pass: string): Promise<Auth
  */
 export async function signInWithGoogle(emailHint?: string): Promise<AuthUser> {
   const email = (emailHint && emailHint.trim().toLowerCase()) || "tripambiswas007@gmail.com";
-  const name = cleanDisplayNameFromEmail(email) || "Google User";
+  const isAdminEmail = email === "tripambiswas007@gmail.com";
+  const userRole: AuthUser["role"] = isAdminEmail ? "admin" : "citizen";
+  const name = isAdminEmail ? "Tripam Biswas" : (cleanDisplayNameFromEmail(email) || "Google User");
 
   // Try backend synchronization
   try {
@@ -192,8 +211,8 @@ export async function signInWithGoogle(emailHint?: string): Promise<AuthUser> {
         email: email,
         password: "Penelope@2026!",
         name: name,
-        role: "citizen",
-        org: "Google Verified Account",
+        role: userRole,
+        org: isAdminEmail ? "PENELOPE Directorate (Admin)" : "Google Verified Account",
       }),
     });
 
@@ -202,8 +221,9 @@ export async function signInWithGoogle(emailHint?: string): Promise<AuthUser> {
       const user: AuthUser = {
         uid: data.user.id,
         email: data.user.email,
-        displayName: data.user.name,
-        role: data.user.role,
+        displayName: isAdminEmail ? "Tripam Biswas" : data.user.name,
+        role: isAdminEmail ? "admin" : data.user.role,
+        org: data.user.org || (isAdminEmail ? "PENELOPE Directorate (Admin)" : undefined),
         accessToken: data.access_token,
         authProvider: "firebase_google",
       };
@@ -218,8 +238,8 @@ export async function signInWithGoogle(emailHint?: string): Promise<AuthUser> {
     uid: `google-${Date.now()}`,
     email: email,
     displayName: name,
-    role: "citizen",
-    org: "Google Verified Account",
+    role: userRole,
+    org: isAdminEmail ? "PENELOPE Directorate (Admin)" : "Google Verified Account",
     accessToken: `google-token-${Date.now()}`,
     authProvider: "firebase_google",
   };
